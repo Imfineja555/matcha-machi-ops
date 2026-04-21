@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { StaffPayroll, DayRecord } from "@/types";
+import { STORE_LEAD_RATE } from "@/lib/slots";
+import { calculateSlotPay } from "@/lib/slots";
 
 type Overrides = Record<string, { isStoreLead?: boolean; leave?: string }>;
 
@@ -36,7 +38,7 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 export default function Home() {
   const [csvText, setCsvText] = useState("");
   const [overrides, setOverrides] = useState<Overrides>({});
-  const [payroll, setPayroll] = useState<StaffPayroll[] | null>(null);
+  const [basePayroll, setBasePayroll] = useState<StaffPayroll[] | null>(null);
   const [weekStart, setWeekStart] = useState("");
   const [weekEnd, setWeekEnd] = useState("");
   const weekLabel = buildWeekLabel(weekStart, weekEnd);
@@ -47,6 +49,27 @@ export default function Home() {
   const [sendResults, setSendResults] = useState<{ name: string; status: string }[] | null>(null);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Apply overrides client-side so checkbox/select changes don't trigger API calls
+  const payroll = useMemo<StaffPayroll[] | null>(() => {
+    if (!basePayroll) return null;
+    return basePayroll.map((staff) => {
+      const days = staff.days.map((day) => {
+        const key = `${staff.name}__${day.date}`;
+        const ov = overrides[key] ?? {};
+        if (day.missingClock) return day;
+        if (ov.leave) return { ...day, isStoreLead: false, leave: ov.leave as DayRecord["leave"], slots: [], dailyTotal: 0 };
+        if (ov.isStoreLead) return { ...day, isStoreLead: true, leave: undefined, slots: [], dailyTotal: STORE_LEAD_RATE };
+        // Restore base slot calculation
+        if (!day.clockIn || !day.clockOut) return day;
+        const slots = calculateSlotPay(day.clockIn, day.clockOut);
+        const dailyTotal = parseFloat(slots.reduce((s, p) => s + p.amount, 0).toFixed(2));
+        return { ...day, isStoreLead: false, leave: undefined, slots, dailyTotal };
+      });
+      const weeklyTotal = parseFloat(days.reduce((s, d) => s + d.dailyTotal, 0).toFixed(2));
+      return { ...staff, days, weeklyTotal };
+    });
+  }, [basePayroll, overrides]);
 
   // Load persisted nicknames and LINE user IDs on mount
   useEffect(() => {
@@ -90,18 +113,18 @@ export default function Home() {
 
   async function calculate() {
     setError("");
-    setPayroll(null);
     setSendResults(null);
     setLoading(true);
     try {
       const res = await fetch("/api/payroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ csvText, overrides }),
+        body: JSON.stringify({ csvText, overrides: {} }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setPayroll(data.payroll);
+      setBasePayroll(data.payroll);
+      setOverrides({});
     } catch (e) {
       setError(String(e));
     } finally {
@@ -210,7 +233,6 @@ export default function Home() {
                 onLeave={setLeave}
                 onLineUserChange={(uid) => saveLineUser(staff.name, uid)}
                 onNicknameChange={(nick) => saveNickname(staff.name, nick)}
-                onRecalculate={calculate}
               />
             ))}
           </section>
@@ -257,7 +279,6 @@ function StaffCard({
   onLeave,
   onLineUserChange,
   onNicknameChange,
-  onRecalculate,
 }: {
   staff: StaffPayroll;
   overrides: Overrides;
@@ -267,7 +288,6 @@ function StaffCard({
   onLeave: (name: string, date: string, val: string) => void;
   onLineUserChange: (uid: string) => void;
   onNicknameChange: (nick: string) => void;
-  onRecalculate: () => void;
 }) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow space-y-4">
@@ -302,7 +322,6 @@ function StaffCard({
             overrides={overrides}
             onStoreLead={onStoreLead}
             onLeave={onLeave}
-            onRecalculate={onRecalculate}
           />
         ))}
       </div>
@@ -316,14 +335,12 @@ function DayRow({
   overrides,
   onStoreLead,
   onLeave,
-  onRecalculate,
 }: {
   day: DayRecord;
   staffName: string;
   overrides: Overrides;
   onStoreLead: (name: string, date: string, val: boolean) => void;
   onLeave: (name: string, date: string, val: string) => void;
-  onRecalculate: () => void;
 }) {
   const key = `${staffName}__${day.date}`;
   const ov = overrides[key] ?? {};
@@ -358,10 +375,7 @@ function DayRow({
           <input
             type="checkbox"
             checked={ov.isStoreLead ?? false}
-            onChange={(e) => {
-              onStoreLead(staffName, day.date, e.target.checked);
-              onRecalculate();
-            }}
+            onChange={(e) => onStoreLead(staffName, day.date, e.target.checked)}
             disabled={!!ov.leave}
             className="accent-[#4a7c59]"
           />
@@ -370,10 +384,7 @@ function DayRow({
 
         <select
           value={ov.leave ?? ""}
-          onChange={(e) => {
-            onLeave(staffName, day.date, e.target.value);
-            onRecalculate();
-          }}
+          onChange={(e) => onLeave(staffName, day.date, e.target.value)}
           className="text-xs border rounded-lg p-1"
         >
           <option value="">มาทำงาน</option>
