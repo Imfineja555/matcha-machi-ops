@@ -474,6 +474,8 @@ function DayRow({
     return `${dd}/${mm}/${yyyy}`;
   })();
 
+  const [isEditing, setIsEditing] = useState(false);
+
   const missingLabel = day.missingClock === "both"
     ? "ไม่มีเวลาเข้า-ออก"
     : day.missingClock === "in"
@@ -526,9 +528,41 @@ function DayRow({
       )}
       <div className="flex flex-wrap items-center gap-3">
         <span className="font-medium text-sm w-28 text-gray-900">{displayDate}</span>
-        <span className="text-xs text-gray-900">
-          {day.clockIn ? day.clockIn.slice(0, 5) : "??:??"} – {day.clockOut ? day.clockOut.slice(0, 5) : "??:??"}
-        </span>
+        {isEditing ? (
+          <div className="flex items-center gap-1">
+            <input
+              type="text"
+              defaultValue={day.clockIn ? day.clockIn.slice(0, 5) : ""}
+              maxLength={5}
+              placeholder="HH:MM"
+              onChange={(e) => {
+                const v = e.target.value;
+                if (/^\d{2}:\d{2}$/.test(v)) onApplyManualClock(staffName, day.date, v, "");
+              }}
+              className="border rounded-lg p-1 text-xs text-gray-900 w-16 font-mono text-center"
+            />
+            <span className="text-xs text-gray-500">–</span>
+            <input
+              type="text"
+              defaultValue={day.clockOut ? day.clockOut.slice(0, 5) : ""}
+              maxLength={5}
+              placeholder="HH:MM"
+              onChange={(e) => {
+                const v = e.target.value;
+                if (/^\d{2}:\d{2}$/.test(v)) onApplyManualClock(staffName, day.date, "", v);
+              }}
+              className="border rounded-lg p-1 text-xs text-gray-900 w-16 font-mono text-center"
+            />
+            <button onClick={() => setIsEditing(false)} className="text-xs text-[#4a7c59] font-medium ml-1">✓</button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-900">
+              {day.clockIn ? day.clockIn.slice(0, 5) : "??:??"} – {day.clockOut ? day.clockOut.slice(0, 5) : "??:??"}
+            </span>
+            <button onClick={() => setIsEditing(true)} className="text-xs text-gray-400 hover:text-[#4a7c59]">✏️</button>
+          </div>
+        )}
 
         <label className="flex items-center gap-1 text-xs text-gray-900 cursor-pointer">
           <input
