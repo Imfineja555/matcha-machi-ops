@@ -237,29 +237,31 @@ export default function Home() {
         {/* Week label */}
         <section className="bg-white rounded-2xl p-6 shadow space-y-3">
           <h2 className="font-semibold text-lg text-[#4a7c59]">2. ระบุสัปดาห์</h2>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 space-y-1">
-              <label className="text-xs text-gray-600">วันแรก</label>
+          <div className="flex items-end gap-2">
+            <div className="flex flex-col gap-2 flex-1">
+              <label className="text-xs text-gray-600 font-medium">วันแรก</label>
               <DatePicker
                 selected={weekStart}
                 onChange={(date: Date | null) => setWeekStart(date)}
                 calendarStartDay={1}
                 dateFormat="dd/MM/yyyy"
-                placeholderText="เลือกวันแรก"
-                className="border rounded-lg p-2 w-full text-sm text-gray-800"
+                placeholderText="dd/mm/yyyy"
+                wrapperClassName="w-full"
+                className="border rounded-lg p-2 w-full text-sm text-gray-900"
               />
             </div>
-            <span className="mt-5 text-gray-500">–</span>
-            <div className="flex-1 space-y-1">
-              <label className="text-xs text-gray-600">วันสุดท้าย</label>
+            <span className="pb-2 text-gray-500 font-medium">–</span>
+            <div className="flex flex-col gap-2 flex-1">
+              <label className="text-xs text-gray-600 font-medium">วันสุดท้าย</label>
               <DatePicker
                 selected={weekEnd}
                 onChange={(date: Date | null) => setWeekEnd(date)}
                 calendarStartDay={1}
                 dateFormat="dd/MM/yyyy"
-                placeholderText="เลือกวันสุดท้าย"
+                placeholderText="dd/mm/yyyy"
                 minDate={weekStart ?? undefined}
-                className="border rounded-lg p-2 w-full text-sm text-gray-800"
+                wrapperClassName="w-full"
+                className="border rounded-lg p-2 w-full text-sm text-gray-900"
               />
             </div>
           </div>
