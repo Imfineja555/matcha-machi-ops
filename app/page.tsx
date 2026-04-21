@@ -183,6 +183,11 @@ export default function Home() {
         {payroll && (
           <section className="bg-white rounded-2xl p-6 shadow space-y-4">
             <h2 className="font-semibold text-lg text-[#4a7c59]">4. ส่ง LINE</h2>
+            {payroll.some((s) => s.days.some((d) => d.missingClock)) && (
+              <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-sm text-amber-800">
+                มีพนักงานบางคนที่ข้อมูลเวลายังไม่ครบ — กรุณาตรวจสอบก่อนส่ง LINE
+              </div>
+            )}
             <button
               onClick={sendLine}
               disabled={sending}
@@ -291,12 +296,25 @@ function DayRow({
     return `${dd}/${mm}/${yyyy}`;
   })();
 
+  const missingLabel = day.missingClock === "both"
+    ? "ไม่มีเวลาเข้า-ออก"
+    : day.missingClock === "in"
+    ? "ไม่มีเวลาเข้างาน"
+    : day.missingClock === "out"
+    ? "ไม่มีเวลาออกงาน"
+    : null;
+
   return (
-    <div className="border rounded-xl p-4 space-y-2 bg-gray-50">
+    <div className={`border rounded-xl p-4 space-y-2 ${day.missingClock ? "bg-amber-50 border-amber-300" : "bg-gray-50"}`}>
+      {missingLabel && (
+        <div className="text-xs font-semibold text-amber-700 bg-amber-100 rounded-lg px-2 py-1 inline-block">
+          ⚠ {missingLabel} — ไม่สามารถคำนวณได้
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="font-medium text-sm w-28">{displayDate}</span>
+        <span className="font-medium text-sm w-28 text-gray-800">{displayDate}</span>
         <span className="text-xs text-gray-500">
-          {day.clockIn.slice(0, 5)} – {day.clockOut.slice(0, 5)}
+          {day.clockIn ? day.clockIn.slice(0, 5) : "??:??"} – {day.clockOut ? day.clockOut.slice(0, 5) : "??:??"}
         </span>
 
         <label className="flex items-center gap-1 text-xs cursor-pointer">

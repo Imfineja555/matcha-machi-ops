@@ -18,8 +18,16 @@ export function buildPayroll(
       const isStoreLead = override.isStoreLead ?? false;
       const leave = override.leave as DayRecord["leave"] | undefined;
 
+      const missingIn = !row.clockIn;
+      const missingOut = !row.clockOut;
+      const missingClock = missingIn && missingOut ? "both" : missingIn ? "in" : missingOut ? "out" : undefined;
+
       if (leave) {
-        return { date: row.date, clockIn: row.clockIn, clockOut: row.clockOut, isStoreLead: false, leave, slots: [], dailyTotal: 0 };
+        return { date: row.date, clockIn: row.clockIn, clockOut: row.clockOut, missingClock, isStoreLead: false, leave, slots: [], dailyTotal: 0 };
+      }
+
+      if (missingClock) {
+        return { date: row.date, clockIn: row.clockIn, clockOut: row.clockOut, missingClock, isStoreLead: false, slots: [], dailyTotal: 0 };
       }
 
       if (isStoreLead) {

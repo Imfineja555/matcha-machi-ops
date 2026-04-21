@@ -33,17 +33,18 @@ export function parsePOSCsv(text: string): CsvRow[] {
     const rawIn = cols[iClockIn] ?? "";
     const rawOut = cols[iClockOut] ?? "";
 
-    // Format: "30/03/2026 08:38:00" → date "2026-03-30", time "08:38:00"
     const { date, time: clockIn } = parseDatetime(rawIn);
-    const { time: clockOut } = parseDatetime(rawOut);
+    const { date: dateOut, time: clockOut } = parseDatetime(rawOut);
 
-    if (!date || !clockIn || !clockOut) continue;
+    // Use whichever date is available
+    const resolvedDate = date || dateOut;
+    if (!resolvedDate) continue;
 
     rows.push({
-      date,
+      date: resolvedDate,
       name: cols[iName] ?? "",
-      clockIn,
-      clockOut,
+      clockIn: clockIn ?? "",
+      clockOut: clockOut ?? "",
       branch: iBranch !== -1 ? (cols[iBranch] ?? "") : "",
     });
   }

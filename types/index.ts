@@ -13,6 +13,7 @@ export type DayRecord = {
   date: string; // "YYYY-MM-DD"
   clockIn: string; // "HH:mm:ss"
   clockOut: string; // "HH:mm:ss"
+  missingClock?: "in" | "out" | "both";
   isStoreLead: boolean;
   leave?: LeaveType;
   slots: SlotPay[];
@@ -28,7 +29,7 @@ export type StaffPayroll = {
 export type CsvRow = {
   date: string;
   name: string;
-  clockIn: string;
-  clockOut: string;
+  clockIn: string; // empty string if missing
+  clockOut: string; // empty string if missing
   branch: string;
 };
