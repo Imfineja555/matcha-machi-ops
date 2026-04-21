@@ -441,12 +441,13 @@ function DayRow({
   const key = `${staffName}__${day.date}`;
   const ov = overrides[key] ?? {};
 
+  const [localIn, setLocalIn] = useState(ov.manualClockIn ?? "");
+  const [localOut, setLocalOut] = useState(ov.manualClockOut ?? "");
+
   const displayDate = (() => {
     const [yyyy, mm, dd] = day.date.split("-");
     return `${dd}/${mm}/${yyyy}`;
   })();
-
-  const safeId = `${staffName}-${day.date}`.replace(/\s/g, "_");
 
   const missingLabel = day.missingClock === "both"
     ? "ไม่มีเวลาเข้า-ออก"
@@ -469,8 +470,8 @@ function DayRow({
                 เวลาเข้างาน
                 <input
                   type="time"
-                  id={`ci-${safeId}`}
-                  defaultValue={ov.manualClockIn ?? ""}
+                  value={localIn}
+                  onChange={(e) => setLocalIn(e.target.value)}
                   className="border rounded-lg p-1 text-xs text-gray-900"
                 />
               </label>
@@ -480,18 +481,16 @@ function DayRow({
                 เวลาออกงาน
                 <input
                   type="time"
-                  id={`co-${safeId}`}
-                  defaultValue={ov.manualClockOut ?? ""}
+                  value={localOut}
+                  onChange={(e) => setLocalOut(e.target.value)}
                   className="border rounded-lg p-1 text-xs text-gray-900"
                 />
               </label>
             )}
             <button
               onClick={() => {
-                const ciEl = document.getElementById(`ci-${safeId}`) as HTMLInputElement | null;
-                const coEl = document.getElementById(`co-${safeId}`) as HTMLInputElement | null;
-                if (ciEl?.value) onManualClock(staffName, day.date, "in", ciEl.value);
-                if (coEl?.value) onManualClock(staffName, day.date, "out", coEl.value);
+                if (localIn) onManualClock(staffName, day.date, "in", localIn);
+                if (localOut) onManualClock(staffName, day.date, "out", localOut);
               }}
               className="bg-[#4a7c59] text-white text-xs px-3 py-1 rounded-lg hover:bg-[#3a6347]"
             >
