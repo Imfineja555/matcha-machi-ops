@@ -450,9 +450,6 @@ function DayRow({
   const key = `${staffName}__${day.date}`;
   const ov = overrides[key] ?? {};
 
-  const [localIn, setLocalIn] = useState("");
-  const [localOut, setLocalOut] = useState("");
-
   const displayDate = (() => {
     const [yyyy, mm, dd] = day.date.split("-");
     return `${dd}/${mm}/${yyyy}`;
@@ -473,40 +470,38 @@ function DayRow({
           <div className="text-xs font-semibold text-amber-700 bg-amber-100 rounded-lg px-2 py-1 inline-block">
             ⚠ {missingLabel} — กรุณากรอกเวลาด้านล่าง
           </div>
-          <p className="text-xs text-red-500">DEBUG — localIn: "{localIn}" | localOut: "{localOut}" | staffName: "{staffName}" | date: "{day.date}"</p>
           <div className="flex flex-wrap gap-3 items-end">
             {(day.missingClock === "in" || day.missingClock === "both") && (
               <label className="flex flex-col gap-1 text-xs text-gray-900">
-                เวลาเข้างาน
+                เวลาเข้างาน (HH:MM)
                 <input
                   type="text"
                   placeholder="เช่น 08:30"
                   maxLength={5}
-                  value={localIn}
-                  onChange={(e) => setLocalIn(e.target.value)}
-                  className="border rounded-lg p-1 text-xs text-gray-900 w-24"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^\d{2}:\d{2}$/.test(v)) onApplyManualClock(staffName, day.date, v, "");
+                  }}
+                  className="border-2 border-amber-400 rounded-lg p-1 text-sm text-gray-900 w-24 font-mono"
                 />
               </label>
             )}
             {(day.missingClock === "out" || day.missingClock === "both") && (
               <label className="flex flex-col gap-1 text-xs text-gray-900">
-                เวลาออกงาน
+                เวลาออกงาน (HH:MM)
                 <input
                   type="text"
                   placeholder="เช่น 18:30"
                   maxLength={5}
-                  value={localOut}
-                  onChange={(e) => setLocalOut(e.target.value)}
-                  className="border rounded-lg p-1 text-xs text-gray-900 w-24"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^\d{2}:\d{2}$/.test(v)) onApplyManualClock(staffName, day.date, "", v);
+                  }}
+                  className="border-2 border-amber-400 rounded-lg p-1 text-sm text-gray-900 w-24 font-mono"
                 />
               </label>
             )}
-            <button
-              onClick={() => onApplyManualClock(staffName, day.date, localIn, localOut)}
-              className="bg-[#4a7c59] text-white text-xs px-3 py-1 rounded-lg hover:bg-[#3a6347]"
-            >
-              ยืนยัน
-            </button>
+            <p className="text-xs text-amber-700">พิมพ์เวลาในรูปแบบ HH:MM แล้วระบบจะคำนวณอัตโนมัติ</p>
           </div>
         </div>
       )}
