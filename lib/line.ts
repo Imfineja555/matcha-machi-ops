@@ -7,7 +7,7 @@ export function buildPaySummary(payroll: StaffPayroll, weekLabel: string, nickna
   const lines: string[] = [
     `สวัสดีครับน้อง${nick} พี่ขอแจ้งสรุปเวลาทำงาน Part time ของสัปดาห์ที่ผ่านมานะครับ`,
     ``,
-    `📋 สัปดาห์ ${weekLabel}`,
+    `สัปดาห์ ${weekLabel}`,
     ``,
   ];
 
