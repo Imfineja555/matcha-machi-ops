@@ -425,12 +425,12 @@ function DayRow({
         </div>
       )}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="font-medium text-sm w-28 text-gray-800">{displayDate}</span>
-        <span className="text-xs text-gray-600">
+        <span className="font-medium text-sm w-28 text-gray-900">{displayDate}</span>
+        <span className="text-xs text-gray-900">
           {day.clockIn ? day.clockIn.slice(0, 5) : "??:??"} – {day.clockOut ? day.clockOut.slice(0, 5) : "??:??"}
         </span>
 
-        <label className="flex items-center gap-1 text-xs cursor-pointer">
+        <label className="flex items-center gap-1 text-xs text-gray-900 cursor-pointer">
           <input
             type="checkbox"
             checked={ov.isStoreLead ?? false}
@@ -444,16 +444,16 @@ function DayRow({
         <select
           value={ov.leave ?? ""}
           onChange={(e) => onLeave(staffName, day.date, e.target.value)}
-          className="text-xs border rounded-lg p-1"
+          className="text-xs border rounded-lg p-1 text-gray-900"
         >
           <option value="">มาทำงาน</option>
           <option value="sick">ลาป่วย</option>
           <option value="personal">ลากิจ</option>
         </select>
 
-        <span className="ml-auto font-semibold text-sm">
+        <span className="ml-auto font-semibold text-sm text-gray-900">
           {day.leave ? (
-            <span className="text-gray-600">{day.leave === "sick" ? "ลาป่วย" : "ลากิจ"}</span>
+            <span className="text-gray-900">{day.leave === "sick" ? "ลาป่วย" : "ลากิจ"}</span>
           ) : (
             `฿${day.dailyTotal.toFixed(2)}`
           )}
@@ -463,7 +463,7 @@ function DayRow({
       {day.slots.length > 0 && (
         <div className="pl-4 space-y-0.5">
           {day.slots.map((s) => (
-            <div key={s.slot} className="text-xs text-gray-700 flex gap-2">
+            <div key={s.slot} className="text-xs text-gray-900 flex gap-2">
               <span>{s.slot}</span>
               <span>({s.from.slice(0, 5)}–{s.to.slice(0, 5)})</span>
               <span>@{s.rate}</span>
@@ -475,7 +475,7 @@ function DayRow({
       )}
 
       {day.isStoreLead && (
-        <div className="pl-4 text-xs text-[#4a7c59] font-medium">Store Lead — ฿500.00 (อัตราคงที่)</div>
+        <div className="pl-4 text-xs text-gray-900 font-medium">Store Lead — ฿500.00 (อัตราคงที่)</div>
       )}
     </div>
   );
