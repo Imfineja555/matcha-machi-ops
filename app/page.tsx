@@ -56,6 +56,8 @@ export default function Home() {
   const [sendResults, setSendResults] = useState<{ name: string; status: string }[] | null>(null);
   // sendHistory: weekLabel → { staffName → sentAt ISO string }
   const [sendHistory, setSendHistory] = useState<Record<string, Record<string, string>>>({});
+  // storeLeadDefaults: staffName → set of day-of-week numbers (0=Sun,1=Mon,...,6=Sat)
+  const [storeLeadDefaults, setStoreLeadDefaults] = useState<Record<string, number[]>>({});
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -85,11 +87,34 @@ export default function Home() {
     });
   }, [basePayroll, overrides]);
 
+  // Auto-apply Store Lead defaults when new payroll loads
+  useEffect(() => {
+    if (!basePayroll) return;
+    setOverrides((prev) => {
+      const next = { ...prev };
+      for (const staff of basePayroll) {
+        const defaultDays = storeLeadDefaults[staff.name.trim()] ?? [];
+        for (const day of staff.days) {
+          if (day.missingClock || day.leave) continue;
+          const dow = new Date(day.date).getDay();
+          if (defaultDays.includes(dow)) {
+            const key = `${staff.name}__${day.date}`;
+            if (!next[key]?.isStoreLead) {
+              next[key] = { ...next[key], isStoreLead: true, leave: undefined };
+            }
+          }
+        }
+      }
+      return next;
+    });
+  }, [basePayroll, storeLeadDefaults]);
+
   // Load persisted data on mount
   useEffect(() => {
     setNicknames(loadFromStorage("mm_nicknames", {}));
     setLineUsers(loadFromStorage("mm_lineUsers", {}));
     setSendHistory(loadFromStorage("mm_sendHistory", {}));
+    setStoreLeadDefaults(loadFromStorage("mm_storeLeadDefaults", {}));
   }, []);
 
   function saveNickname(name: string, nick: string) {
@@ -121,6 +146,16 @@ export default function Home() {
   function setStoreLead(name: string, date: string, val: boolean) {
     const key = `${name}__${date}`;
     setOverrides((prev) => ({ ...prev, [key]: { ...prev[key], isStoreLead: val, leave: undefined } }));
+
+    // Remember which day-of-week this person is Store Lead
+    const dow = new Date(date).getDay();
+    setStoreLeadDefaults((prev) => {
+      const days = prev[name.trim()] ?? [];
+      const updated = val ? [...new Set([...days, dow])] : days.filter((d) => d !== dow);
+      const next = { ...prev, [name.trim()]: updated };
+      localStorage.setItem("mm_storeLeadDefaults", JSON.stringify(next));
+      return next;
+    });
   }
 
   function setLeave(name: string, date: string, val: string) {
