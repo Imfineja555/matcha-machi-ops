@@ -148,7 +148,7 @@ export default function Home() {
             {csvText ? "✓ ไฟล์โหลดแล้ว — คลิกเพื่อเปลี่ยน" : "คลิกเพื่อเลือกไฟล์ CSV"}
           </button>
           {csvText && (
-            <pre className="text-xs bg-gray-50 rounded-lg p-3 overflow-auto max-h-32 text-gray-500">
+            <pre className="text-xs bg-gray-50 rounded-lg p-3 overflow-auto max-h-32 text-gray-600">
               {csvText.split("\n").slice(0, 5).join("\n")}
             </pre>
           )}
@@ -159,7 +159,7 @@ export default function Home() {
           <h2 className="font-semibold text-lg text-[#4a7c59]">2. ระบุสัปดาห์</h2>
           <div className="flex items-center gap-3">
             <div className="flex-1 space-y-1">
-              <label className="text-xs text-gray-500">วันแรก</label>
+              <label className="text-xs text-gray-600">วันแรก</label>
               <input
                 type="date"
                 value={weekStart}
@@ -167,9 +167,9 @@ export default function Home() {
                 className="border rounded-lg p-2 w-full text-sm text-gray-800"
               />
             </div>
-            <span className="mt-5 text-gray-400">–</span>
+            <span className="mt-5 text-gray-500">–</span>
             <div className="flex-1 space-y-1">
-              <label className="text-xs text-gray-500">วันสุดท้าย</label>
+              <label className="text-xs text-gray-600">วันสุดท้าย</label>
               <input
                 type="date"
                 value={weekEnd}
@@ -350,7 +350,7 @@ function DayRow({
       )}
       <div className="flex flex-wrap items-center gap-3">
         <span className="font-medium text-sm w-28 text-gray-800">{displayDate}</span>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-gray-600">
           {day.clockIn ? day.clockIn.slice(0, 5) : "??:??"} – {day.clockOut ? day.clockOut.slice(0, 5) : "??:??"}
         </span>
 
@@ -383,7 +383,7 @@ function DayRow({
 
         <span className="ml-auto font-semibold text-sm">
           {day.leave ? (
-            <span className="text-gray-400">{day.leave === "sick" ? "ลาป่วย" : "ลากิจ"}</span>
+            <span className="text-gray-600">{day.leave === "sick" ? "ลาป่วย" : "ลากิจ"}</span>
           ) : (
             `฿${day.dailyTotal.toFixed(2)}`
           )}
@@ -393,7 +393,7 @@ function DayRow({
       {day.slots.length > 0 && (
         <div className="pl-4 space-y-0.5">
           {day.slots.map((s) => (
-            <div key={s.slot} className="text-xs text-gray-500 flex gap-2">
+            <div key={s.slot} className="text-xs text-gray-700 flex gap-2">
               <span>{s.slot}</span>
               <span>({s.from.slice(0, 5)}–{s.to.slice(0, 5)})</span>
               <span>@{s.rate}</span>
