@@ -47,6 +47,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendResults, setSendResults] = useState<{ name: string; status: string }[] | null>(null);
+  // sendHistory: weekLabel → { staffName → sentAt ISO string }
+  const [sendHistory, setSendHistory] = useState<Record<string, Record<string, string>>>({});
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -71,10 +73,11 @@ export default function Home() {
     });
   }, [basePayroll, overrides]);
 
-  // Load persisted nicknames and LINE user IDs on mount
+  // Load persisted data on mount
   useEffect(() => {
     setNicknames(loadFromStorage("mm_nicknames", {}));
     setLineUsers(loadFromStorage("mm_lineUsers", {}));
+    setSendHistory(loadFromStorage("mm_sendHistory", {}));
   }, []);
 
   function saveNickname(name: string, nick: string) {
@@ -144,6 +147,18 @@ export default function Home() {
       });
       const data = await res.json();
       setSendResults(data.results);
+
+      // Record successful sends in history
+      const now = new Date().toISOString();
+      setSendHistory((prev) => {
+        const weekEntry = { ...(prev[weekLabel] ?? {}) };
+        for (const r of data.results) {
+          if (r.status === "sent") weekEntry[r.name] = now;
+        }
+        const updated = { ...prev, [weekLabel]: weekEntry };
+        localStorage.setItem("mm_sendHistory", JSON.stringify(updated));
+        return updated;
+      });
     } catch (e) {
       setError(String(e));
     } finally {
@@ -262,6 +277,50 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
+            )}
+          </section>
+        )}
+        {/* Send history */}
+        {payroll && weekLabel && (
+          <section className="bg-white rounded-2xl p-6 shadow space-y-4">
+            <h2 className="font-semibold text-lg text-[#4a7c59]">5. สถานะการแจ้งค่าจ้าง — {weekLabel}</h2>
+            <div className="space-y-2">
+              {payroll.map((staff) => {
+                const sentAt = sendHistory[weekLabel]?.[staff.name];
+                return (
+                  <div key={staff.name} className="flex items-center justify-between border rounded-xl px-4 py-3">
+                    <span className="font-medium text-gray-800">{staff.name}</span>
+                    {sentAt ? (
+                      <span className="text-green-600 text-sm font-medium">
+                        ✓ ส่งแล้ว — {new Date(sentAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
+                      </span>
+                    ) : (
+                      <span className="text-amber-600 text-sm font-medium">ยังไม่ได้ส่ง</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {Object.keys(sendHistory).length > 1 && (
+              <details className="text-sm text-gray-600">
+                <summary className="cursor-pointer text-[#4a7c59] font-medium">ประวัติสัปดาห์ก่อนหน้า</summary>
+                <div className="mt-2 space-y-3">
+                  {Object.entries(sendHistory)
+                    .filter(([week]) => week !== weekLabel)
+                    .sort(([a], [b]) => b.localeCompare(a))
+                    .map(([week, names]) => (
+                      <div key={week}>
+                        <p className="font-medium text-gray-700 mb-1">{week}</p>
+                        {Object.entries(names).map(([name, sentAt]) => (
+                          <div key={name} className="flex justify-between text-xs text-gray-600 pl-2">
+                            <span>{name}</span>
+                            <span className="text-green-600">✓ {new Date(sentAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                </div>
+              </details>
             )}
           </section>
         )}
