@@ -6,7 +6,7 @@ export function buildPaySummary(payroll: StaffPayroll, weekLabel: string): strin
   const lines: string[] = [
     `📋 สรุปค่าจ้างสัปดาห์ ${weekLabel}`,
     `👤 ${payroll.name}`,
-    `${"─".repeat(28)}`,
+    ``,
   ];
 
   for (const day of payroll.days) {
@@ -24,7 +24,7 @@ export function buildPaySummary(payroll: StaffPayroll, weekLabel: string): strin
     }
   }
 
-  lines.push(`${"─".repeat(28)}`);
+  lines.push(``);
   lines.push(`💰 รวม ฿${payroll.weeklyTotal.toFixed(2)}`);
   return lines.join("\n");
 }
