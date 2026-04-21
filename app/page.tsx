@@ -350,7 +350,7 @@ export default function Home() {
             )}
           </section>
         )}
-        {/* Send history */}
+        {/* Panel 5: Payment Status */}
         {payroll && weekLabel && (
           <section className="bg-white rounded-2xl p-6 shadow space-y-4">
             <h2 className="font-semibold text-lg text-[#4a7c59]">5. สถานะการแจ้งค่าจ้าง — {weekLabel}</h2>
@@ -359,7 +359,7 @@ export default function Home() {
                 const sentAt = sendHistory[weekLabel]?.[staff.name.trim()];
                 return (
                   <div key={staff.name} className="flex items-center justify-between border rounded-xl px-4 py-3">
-                    <span className="font-medium text-gray-800">{staff.name}</span>
+                    <span className="font-medium text-gray-800 text-sm">{staff.name}</span>
                     {sentAt ? (
                       <span className="text-green-600 text-sm font-medium">
                         ✓ ส่งแล้ว — {new Date(sentAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
@@ -392,6 +392,62 @@ export default function Home() {
                 </div>
               </details>
             )}
+          </section>
+        )}
+
+        {/* Panel 6: Store Lead Defaults */}
+        {payroll && (
+          <section className="bg-white rounded-2xl p-6 shadow space-y-4">
+            <div>
+              <h2 className="font-semibold text-lg text-[#4a7c59]">6. วันที่เป็น Store Lead (ค่าเริ่มต้น)</h2>
+              <p className="text-xs text-gray-500 mt-1">ติ๊กวันที่แต่ละคนมักเป็น Store Lead — ระบบจะติ๊กให้อัตโนมัติทุกสัปดาห์</p>
+            </div>
+            <div className="space-y-3">
+              {payroll.map((staff) => {
+                const defaultDays = storeLeadDefaults[staff.name.trim()] ?? [];
+                const days = [
+                  { label: "จ", dow: 1 },
+                  { label: "อ", dow: 2 },
+                  { label: "พ", dow: 3 },
+                  { label: "พฤ", dow: 4 },
+                  { label: "ศ", dow: 5 },
+                  { label: "ส", dow: 6 },
+                  { label: "อา", dow: 0 },
+                ];
+                return (
+                  <div key={staff.name} className="flex flex-wrap items-center gap-3 border rounded-xl px-4 py-3">
+                    <span className="text-sm font-medium text-gray-800 w-40 truncate">{staff.name}</span>
+                    <div className="flex gap-2">
+                      {days.map(({ label, dow }) => {
+                        const active = defaultDays.includes(dow);
+                        return (
+                          <button
+                            key={dow}
+                            onClick={() => {
+                              const updated = active
+                                ? defaultDays.filter((d) => d !== dow)
+                                : [...defaultDays, dow];
+                              setStoreLeadDefaults((prev) => {
+                                const next = { ...prev, [staff.name.trim()]: updated };
+                                localStorage.setItem("mm_storeLeadDefaults", JSON.stringify(next));
+                                return next;
+                              });
+                            }}
+                            className={`w-8 h-8 rounded-full text-xs font-semibold transition ${
+                              active
+                                ? "bg-[#4a7c59] text-white"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </section>
         )}
       </div>
