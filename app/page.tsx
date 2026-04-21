@@ -469,10 +469,12 @@ function DayRow({
               <label className="flex flex-col gap-1 text-xs text-gray-900">
                 เวลาเข้างาน
                 <input
-                  type="time"
+                  type="text"
+                  placeholder="เช่น 08:30"
+                  maxLength={5}
                   value={localIn}
                   onChange={(e) => setLocalIn(e.target.value)}
-                  className="border rounded-lg p-1 text-xs text-gray-900"
+                  className="border rounded-lg p-1 text-xs text-gray-900 w-24"
                 />
               </label>
             )}
@@ -480,17 +482,19 @@ function DayRow({
               <label className="flex flex-col gap-1 text-xs text-gray-900">
                 เวลาออกงาน
                 <input
-                  type="time"
+                  type="text"
+                  placeholder="เช่น 18:30"
+                  maxLength={5}
                   value={localOut}
                   onChange={(e) => setLocalOut(e.target.value)}
-                  className="border rounded-lg p-1 text-xs text-gray-900"
+                  className="border rounded-lg p-1 text-xs text-gray-900 w-24"
                 />
               </label>
             )}
             <button
               onClick={() => {
-                if (localIn) onManualClock(staffName, day.date, "in", localIn);
-                if (localOut) onManualClock(staffName, day.date, "out", localOut);
+                if (localIn && /^\d{2}:\d{2}$/.test(localIn)) onManualClock(staffName, day.date, "in", localIn);
+                if (localOut && /^\d{2}:\d{2}$/.test(localOut)) onManualClock(staffName, day.date, "out", localOut);
               }}
               className="bg-[#4a7c59] text-white text-xs px-3 py-1 rounded-lg hover:bg-[#3a6347]"
             >
