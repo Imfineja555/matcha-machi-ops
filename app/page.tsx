@@ -473,6 +473,7 @@ function DayRow({
           <div className="text-xs font-semibold text-amber-700 bg-amber-100 rounded-lg px-2 py-1 inline-block">
             ⚠ {missingLabel} — กรุณากรอกเวลาด้านล่าง
           </div>
+          <p className="text-xs text-red-500">DEBUG — localIn: "{localIn}" | localOut: "{localOut}" | staffName: "{staffName}" | date: "{day.date}"</p>
           <div className="flex flex-wrap gap-3 items-end">
             {(day.missingClock === "in" || day.missingClock === "both") && (
               <label className="flex flex-col gap-1 text-xs text-gray-900">
