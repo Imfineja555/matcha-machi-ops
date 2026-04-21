@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { StaffPayroll, DayRecord } from "@/types";
 
 type Overrides = Record<string, { isStoreLead?: boolean; leave?: string }>;
+
+function loadFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export default function Home() {
   const [csvText, setCsvText] = useState("");
@@ -11,11 +21,34 @@ export default function Home() {
   const [payroll, setPayroll] = useState<StaffPayroll[] | null>(null);
   const [weekLabel, setWeekLabel] = useState("");
   const [lineUsers, setLineUsers] = useState<Record<string, string>>({});
+  const [nicknames, setNicknames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendResults, setSendResults] = useState<{ name: string; status: string }[] | null>(null);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Load persisted nicknames and LINE user IDs on mount
+  useEffect(() => {
+    setNicknames(loadFromStorage("mm_nicknames", {}));
+    setLineUsers(loadFromStorage("mm_lineUsers", {}));
+  }, []);
+
+  function saveNickname(name: string, nick: string) {
+    setNicknames((prev) => {
+      const updated = { ...prev, [name]: nick };
+      localStorage.setItem("mm_nicknames", JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  function saveLineUser(name: string, uid: string) {
+    setLineUsers((prev) => {
+      const updated = { ...prev, [name]: uid };
+      localStorage.setItem("mm_lineUsers", JSON.stringify(updated));
+      return updated;
+    });
+  }
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -64,7 +97,7 @@ export default function Home() {
       const res = await fetch("/api/line", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payroll, lineUsers, weekLabel }),
+        body: JSON.stringify({ payroll, lineUsers, nicknames, weekLabel }),
       });
       const data = await res.json();
       setSendResults(data.results);
@@ -135,9 +168,11 @@ export default function Home() {
                 staff={staff}
                 overrides={overrides}
                 lineUserId={lineUsers[staff.name] ?? ""}
+                nickname={nicknames[staff.name] ?? ""}
                 onStoreLead={setStoreLead}
                 onLeave={setLeave}
-                onLineUserChange={(uid) => setLineUsers((prev) => ({ ...prev, [staff.name]: uid }))}
+                onLineUserChange={(uid) => saveLineUser(staff.name, uid)}
+                onNicknameChange={(nick) => saveNickname(staff.name, nick)}
                 onRecalculate={calculate}
               />
             ))}
@@ -175,33 +210,46 @@ function StaffCard({
   staff,
   overrides,
   lineUserId,
+  nickname,
   onStoreLead,
   onLeave,
   onLineUserChange,
+  onNicknameChange,
   onRecalculate,
 }: {
   staff: StaffPayroll;
   overrides: Overrides;
   lineUserId: string;
+  nickname: string;
   onStoreLead: (name: string, date: string, val: boolean) => void;
   onLeave: (name: string, date: string, val: string) => void;
   onLineUserChange: (uid: string) => void;
+  onNicknameChange: (nick: string) => void;
   onRecalculate: () => void;
 }) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-lg">{staff.name}</h3>
+        <h3 className="font-bold text-lg text-gray-800">{staff.name}</h3>
         <span className="text-[#4a7c59] font-bold text-xl">฿{staff.weeklyTotal.toFixed(2)}</span>
       </div>
 
-      <input
-        type="text"
-        placeholder="LINE User ID (Uxxxxxxxx...)"
-        value={lineUserId}
-        onChange={(e) => onLineUserChange(e.target.value)}
-        className="border rounded-lg p-2 w-full text-sm font-mono"
-      />
+      <div className="flex gap-3">
+        <input
+          type="text"
+          placeholder="ชื่อเล่น (nickname)"
+          value={nickname}
+          onChange={(e) => onNicknameChange(e.target.value)}
+          className="border rounded-lg p-2 w-1/3 text-sm text-gray-800"
+        />
+        <input
+          type="text"
+          placeholder="LINE User ID (Uxxxxxxxx...)"
+          value={lineUserId}
+          onChange={(e) => onLineUserChange(e.target.value)}
+          className="border rounded-lg p-2 flex-1 text-sm font-mono text-gray-800"
+        />
+      </div>
 
       <div className="space-y-3">
         {staff.days.map((day) => (

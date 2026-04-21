@@ -4,9 +4,10 @@ import { StaffPayroll } from "@/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const { payroll, lineUsers, weekLabel } = await req.json() as {
+    const { payroll, lineUsers, nicknames, weekLabel } = await req.json() as {
       payroll: StaffPayroll[];
-      lineUsers: Record<string, string>; // name → LINE userId
+      lineUsers: Record<string, string>;
+      nicknames: Record<string, string>;
       weekLabel: string;
     };
 
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
         continue;
       }
       try {
-        const text = buildPaySummary(staff, weekLabel);
+        const text = buildPaySummary(staff, weekLabel, nicknames?.[staff.name]);
         await sendLineMessage(userId, text, token);
         results.push({ name: staff.name, status: "sent" });
       } catch (e) {
