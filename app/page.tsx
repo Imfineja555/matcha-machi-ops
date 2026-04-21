@@ -87,28 +87,6 @@ export default function Home() {
     });
   }, [basePayroll, overrides]);
 
-  // Auto-apply Store Lead defaults when new payroll loads
-  useEffect(() => {
-    if (!basePayroll) return;
-    setOverrides((prev) => {
-      const next = { ...prev };
-      for (const staff of basePayroll) {
-        const defaultDays = storeLeadDefaults[staff.name.trim()] ?? [];
-        for (const day of staff.days) {
-          if (day.missingClock || day.leave) continue;
-          const dow = new Date(day.date).getDay();
-          if (defaultDays.includes(dow)) {
-            const key = `${staff.name}__${day.date}`;
-            if (!next[key]?.isStoreLead) {
-              next[key] = { ...next[key], isStoreLead: true, leave: undefined };
-            }
-          }
-        }
-      }
-      return next;
-    });
-  }, [basePayroll, storeLeadDefaults]);
-
   // Load persisted data on mount
   useEffect(() => {
     setNicknames(loadFromStorage("mm_nicknames", {}));
@@ -205,7 +183,21 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setBasePayroll(data.payroll);
-      setOverrides({});
+
+      // Apply Store Lead defaults from localStorage directly (avoids useEffect timing issues)
+      const savedDefaults = loadFromStorage<Record<string, number[]>>("mm_storeLeadDefaults", {});
+      const newOverrides: Overrides = {};
+      for (const staff of data.payroll) {
+        const defaultDays = savedDefaults[staff.name.trim()] ?? [];
+        for (const day of staff.days) {
+          if (day.missingClock) continue;
+          const dow = new Date(day.date).getDay();
+          if (defaultDays.includes(dow)) {
+            newOverrides[`${staff.name}__${day.date}`] = { isStoreLead: true };
+          }
+        }
+      }
+      setOverrides(newOverrides);
     } catch (e) {
       setError(String(e));
     } finally {
