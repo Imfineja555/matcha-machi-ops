@@ -306,7 +306,7 @@ export default function Home() {
         {payroll && (
           <section className="space-y-4">
             <h2 className="font-semibold text-lg text-[#4a7c59]">3. ผลการคำนวณ</h2>
-            {payroll.map((staff) => (
+            {[...payroll].sort((a, b) => a.name.localeCompare(b.name, "th")).map((staff) => (
               <StaffCard
                 key={staff.name}
                 staff={staff}
@@ -355,7 +355,7 @@ export default function Home() {
           <section className="bg-white rounded-2xl p-6 shadow space-y-4">
             <h2 className="font-semibold text-lg text-[#4a7c59]">5. สถานะการแจ้งค่าจ้าง — {weekLabel}</h2>
             <div className="space-y-2">
-              {payroll.map((staff) => {
+              {[...payroll].sort((a, b) => a.name.localeCompare(b.name, "th")).map((staff) => {
                 const sentAt = sendHistory[weekLabel]?.[staff.name.trim()];
                 return (
                   <div key={staff.name} className="flex items-center justify-between border rounded-xl px-4 py-3">
@@ -403,7 +403,7 @@ export default function Home() {
               <p className="text-xs text-gray-500 mt-1">ติ๊กวันที่แต่ละคนมักเป็น Store Lead — ระบบจะติ๊กให้อัตโนมัติทุกสัปดาห์</p>
             </div>
             <div className="space-y-3">
-              {payroll.map((staff) => {
+              {[...payroll].sort((a, b) => a.name.localeCompare(b.name, "th")).map((staff) => {
                 const defaultDays = storeLeadDefaults[staff.name.trim()] ?? [];
                 const days = [
                   { label: "จ", dow: 1 },
