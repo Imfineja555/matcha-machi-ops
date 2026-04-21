@@ -461,29 +461,40 @@ function DayRow({
           <div className="text-xs font-semibold text-amber-700 bg-amber-100 rounded-lg px-2 py-1 inline-block">
             ⚠ {missingLabel} — กรุณากรอกเวลาด้านล่าง
           </div>
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex flex-wrap gap-3 items-end">
             {(day.missingClock === "in" || day.missingClock === "both") && (
-              <label className="flex items-center gap-1 text-xs text-gray-900">
+              <label className="flex flex-col gap-1 text-xs text-gray-900">
                 เวลาเข้างาน
                 <input
                   type="time"
-                  value={ov.manualClockIn ?? ""}
-                  onChange={(e) => onManualClock(staffName, day.date, "in", e.target.value)}
+                  id={`ci-${staffName}-${day.date}`}
+                  defaultValue={ov.manualClockIn ?? ""}
                   className="border rounded-lg p-1 text-xs text-gray-900"
                 />
               </label>
             )}
             {(day.missingClock === "out" || day.missingClock === "both") && (
-              <label className="flex items-center gap-1 text-xs text-gray-900">
+              <label className="flex flex-col gap-1 text-xs text-gray-900">
                 เวลาออกงาน
                 <input
                   type="time"
-                  value={ov.manualClockOut ?? ""}
-                  onChange={(e) => onManualClock(staffName, day.date, "out", e.target.value)}
+                  id={`co-${staffName}-${day.date}`}
+                  defaultValue={ov.manualClockOut ?? ""}
                   className="border rounded-lg p-1 text-xs text-gray-900"
                 />
               </label>
             )}
+            <button
+              onClick={() => {
+                const ciEl = document.getElementById(`ci-${staffName}-${day.date}`) as HTMLInputElement | null;
+                const coEl = document.getElementById(`co-${staffName}-${day.date}`) as HTMLInputElement | null;
+                if (ciEl?.value) onManualClock(staffName, day.date, "in", ciEl.value);
+                if (coEl?.value) onManualClock(staffName, day.date, "out", coEl.value);
+              }}
+              className="bg-[#4a7c59] text-white text-xs px-3 py-1 rounded-lg hover:bg-[#3a6347]"
+            >
+              ยืนยัน
+            </button>
           </div>
         </div>
       )}
