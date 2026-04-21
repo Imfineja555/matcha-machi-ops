@@ -53,7 +53,6 @@ export default function Home() {
   const [lineUsers, setLineUsers] = useState<Record<string, string>>({});
   const [nicknames, setNicknames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
   const [sendResults, setSendResults] = useState<{ name: string; status: string }[] | null>(null);
   // sendHistory: weekLabel → { staffName → sentAt ISO string }
   const [sendHistory, setSendHistory] = useState<Record<string, Record<string, string>>>({});
@@ -179,20 +178,22 @@ export default function Home() {
     }
   }
 
-  async function sendLine() {
+  const [sendingName, setSendingName] = useState<string | null>(null);
+
+  async function sendLine(staffName?: string) {
     if (!payroll) return;
-    setSending(true);
+    const targetPayroll = staffName ? payroll.filter((s) => s.name === staffName) : payroll;
+    setSendingName(staffName ?? "all");
     setSendResults(null);
     try {
       const res = await fetch("/api/line", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payroll, lineUsers, nicknames, weekLabel }),
+        body: JSON.stringify({ payroll: targetPayroll, lineUsers, nicknames, weekLabel }),
       });
       const data = await res.json();
       setSendResults(data.results);
 
-      // Record successful sends in history
       const now = new Date().toISOString();
       setSendHistory((prev) => {
         const weekEntry = { ...(prev[weekLabel] ?? {}) };
@@ -206,7 +207,7 @@ export default function Home() {
     } catch (e) {
       setError(String(e));
     } finally {
-      setSending(false);
+      setSendingName(null);
     }
   }
 
@@ -295,32 +296,30 @@ export default function Home() {
                 overrides={overrides}
                 lineUserId={lineUsers[staff.name.trim()] ?? ""}
                 nickname={nicknames[staff.name.trim()] ?? ""}
+                sendHistory={sendHistory[weekLabel] ?? {}}
+                isSending={sendingName === staff.name}
                 onStoreLead={setStoreLead}
                 onLeave={setLeave}
                 onBonus={setBonus}
                 onApplyManualClock={applyManualClock}
                 onLineUserChange={(uid) => saveLineUser(staff.name, uid)}
                 onNicknameChange={(nick) => saveNickname(staff.name, nick)}
+                onSendLine={() => sendLine(staff.name)}
               />
             ))}
           </section>
         )}
 
-        {/* LINE */}
+        {/* Send all LINE */}
         {payroll && (
           <section className="bg-white rounded-2xl p-6 shadow space-y-4">
-            <h2 className="font-semibold text-lg text-[#4a7c59]">4. ส่ง LINE</h2>
-            {payroll.some((s) => s.days.some((d) => d.missingClock)) && (
-              <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-sm text-amber-800">
-                มีพนักงานบางคนที่ข้อมูลเวลายังไม่ครบ — กรุณาตรวจสอบก่อนส่ง LINE
-              </div>
-            )}
+            <h2 className="font-semibold text-lg text-[#4a7c59]">4. ส่ง LINE ทุกคน</h2>
             <button
-              onClick={sendLine}
-              disabled={sending}
+              onClick={() => sendLine()}
+              disabled={sendingName !== null}
               className="w-full bg-[#06C755] text-white py-3 rounded-xl font-semibold disabled:opacity-40 hover:bg-[#05a847] transition"
             >
-              {sending ? "กำลังส่ง..." : "ส่งสรุปค่าจ้างทาง LINE"}
+              {sendingName === "all" ? "กำลังส่ง..." : "ส่งสรุปค่าจ้างทุกคนพร้อมกัน"}
             </button>
             {sendResults && (
               <ul className="text-sm space-y-1">
@@ -387,23 +386,29 @@ function StaffCard({
   overrides,
   lineUserId,
   nickname,
+  sendHistory,
+  isSending,
   onStoreLead,
   onLeave,
   onBonus,
   onApplyManualClock,
   onLineUserChange,
   onNicknameChange,
+  onSendLine,
 }: {
   staff: StaffPayroll;
   overrides: Overrides;
   lineUserId: string;
   nickname: string;
+  sendHistory: Record<string, string>;
+  isSending: boolean;
   onStoreLead: (name: string, date: string, val: boolean) => void;
   onLeave: (name: string, date: string, val: string) => void;
   onBonus: (name: string, date: string, val: string) => void;
   onApplyManualClock: (staffName: string, date: string, clockIn: string, clockOut: string) => void;
   onLineUserChange: (uid: string) => void;
   onNicknameChange: (nick: string) => void;
+  onSendLine: () => void;
 }) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow space-y-4">
@@ -444,6 +449,26 @@ function StaffCard({
             onApplyManualClock={onApplyManualClock}
           />
         ))}
+      </div>
+
+      {/* Per-staff LINE send button */}
+      <div className="border-t pt-4 flex items-center justify-between">
+        <div className="text-xs text-gray-500">
+          {sendHistory[staff.name] ? (
+            <span className="text-green-600 font-medium">
+              ✓ ส่งแล้ว {new Date(sendHistory[staff.name]).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
+            </span>
+          ) : (
+            <span className="text-amber-600">ยังไม่ได้ส่ง</span>
+          )}
+        </div>
+        <button
+          onClick={onSendLine}
+          disabled={isSending || !lineUserId}
+          className="bg-[#06C755] text-white text-sm px-4 py-2 rounded-xl font-semibold disabled:opacity-40 hover:bg-[#05a847] transition"
+        >
+          {isSending ? "กำลังส่ง..." : "ส่ง LINE"}
+        </button>
       </div>
     </div>
   );
