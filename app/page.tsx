@@ -43,9 +43,12 @@ export default function Home() {
   const [basePayroll, setBasePayroll] = useState<StaffPayroll[] | null>(null);
   const [weekStart, setWeekStart] = useState<Date | null>(null);
   const [weekEnd, setWeekEnd] = useState<Date | null>(null);
+  function toLocalISO(d: Date) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
   const weekLabel = buildWeekLabel(
-    weekStart ? weekStart.toISOString().slice(0, 10) : "",
-    weekEnd ? weekEnd.toISOString().slice(0, 10) : ""
+    weekStart ? toLocalISO(weekStart) : "",
+    weekEnd ? toLocalISO(weekEnd) : ""
   );
   const [lineUsers, setLineUsers] = useState<Record<string, string>>({});
   const [nicknames, setNicknames] = useState<Record<string, string>>({});
