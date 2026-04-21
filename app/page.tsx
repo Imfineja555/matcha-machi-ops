@@ -5,6 +5,24 @@ import { StaffPayroll, DayRecord } from "@/types";
 
 type Overrides = Record<string, { isStoreLead?: boolean; leave?: string }>;
 
+const THAI_MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+
+function toThaiDate(iso: string): string {
+  if (!iso) return "";
+  const [yyyy, mm, dd] = iso.split("-").map(Number);
+  return `${dd} ${THAI_MONTHS[mm - 1]} ${yyyy + 543}`;
+}
+
+function buildWeekLabel(start: string, end: string): string {
+  if (!start && !end) return "";
+  if (!end) return toThaiDate(start);
+  const [, sm, sd] = start.split("-").map(Number);
+  const [, em, ed] = end.split("-").map(Number);
+  const thaiYear = Number(end.split("-")[0]) + 543;
+  if (sm === em) return `${sd}–${ed} ${THAI_MONTHS[em - 1]} ${thaiYear}`;
+  return `${sd} ${THAI_MONTHS[sm - 1]} – ${ed} ${THAI_MONTHS[em - 1]} ${thaiYear}`;
+}
+
 function loadFromStorage<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
@@ -19,7 +37,9 @@ export default function Home() {
   const [csvText, setCsvText] = useState("");
   const [overrides, setOverrides] = useState<Overrides>({});
   const [payroll, setPayroll] = useState<StaffPayroll[] | null>(null);
-  const [weekLabel, setWeekLabel] = useState("");
+  const [weekStart, setWeekStart] = useState("");
+  const [weekEnd, setWeekEnd] = useState("");
+  const weekLabel = buildWeekLabel(weekStart, weekEnd);
   const [lineUsers, setLineUsers] = useState<Record<string, string>>({});
   const [nicknames, setNicknames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -137,13 +157,30 @@ export default function Home() {
         {/* Week label */}
         <section className="bg-white rounded-2xl p-6 shadow space-y-3">
           <h2 className="font-semibold text-lg text-[#4a7c59]">2. ระบุสัปดาห์</h2>
-          <input
-            type="text"
-            placeholder="เช่น 7–13 เม.ย. 2569"
-            value={weekLabel}
-            onChange={(e) => setWeekLabel(e.target.value)}
-            className="border rounded-lg p-2 w-full text-sm"
-          />
+          <div className="flex items-center gap-3">
+            <div className="flex-1 space-y-1">
+              <label className="text-xs text-gray-500">วันแรก</label>
+              <input
+                type="date"
+                value={weekStart}
+                onChange={(e) => setWeekStart(e.target.value)}
+                className="border rounded-lg p-2 w-full text-sm text-gray-800"
+              />
+            </div>
+            <span className="mt-5 text-gray-400">–</span>
+            <div className="flex-1 space-y-1">
+              <label className="text-xs text-gray-500">วันสุดท้าย</label>
+              <input
+                type="date"
+                value={weekEnd}
+                onChange={(e) => setWeekEnd(e.target.value)}
+                className="border rounded-lg p-2 w-full text-sm text-gray-800"
+              />
+            </div>
+          </div>
+          {weekLabel && (
+            <p className="text-sm text-[#4a7c59] font-medium">สัปดาห์: {weekLabel}</p>
+          )}
         </section>
 
         {/* Calculate */}
