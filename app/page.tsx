@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { StaffPayroll, DayRecord } from "@/types";
 import { STORE_LEAD_RATE } from "@/lib/slots";
 import { calculateSlotPay } from "@/lib/slots";
@@ -39,9 +41,12 @@ export default function Home() {
   const [csvText, setCsvText] = useState("");
   const [overrides, setOverrides] = useState<Overrides>({});
   const [basePayroll, setBasePayroll] = useState<StaffPayroll[] | null>(null);
-  const [weekStart, setWeekStart] = useState("");
-  const [weekEnd, setWeekEnd] = useState("");
-  const weekLabel = buildWeekLabel(weekStart, weekEnd);
+  const [weekStart, setWeekStart] = useState<Date | null>(null);
+  const [weekEnd, setWeekEnd] = useState<Date | null>(null);
+  const weekLabel = buildWeekLabel(
+    weekStart ? weekStart.toISOString().slice(0, 10) : "",
+    weekEnd ? weekEnd.toISOString().slice(0, 10) : ""
+  );
   const [lineUsers, setLineUsers] = useState<Record<string, string>>({});
   const [nicknames, setNicknames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -232,20 +237,25 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <div className="flex-1 space-y-1">
               <label className="text-xs text-gray-600">วันแรก</label>
-              <input
-                type="date"
-                value={weekStart}
-                onChange={(e) => setWeekStart(e.target.value)}
+              <DatePicker
+                selected={weekStart}
+                onChange={(date: Date | null) => setWeekStart(date)}
+                calendarStartDay={1}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="เลือกวันแรก"
                 className="border rounded-lg p-2 w-full text-sm text-gray-800"
               />
             </div>
             <span className="mt-5 text-gray-500">–</span>
             <div className="flex-1 space-y-1">
               <label className="text-xs text-gray-600">วันสุดท้าย</label>
-              <input
-                type="date"
-                value={weekEnd}
-                onChange={(e) => setWeekEnd(e.target.value)}
+              <DatePicker
+                selected={weekEnd}
+                onChange={(date: Date | null) => setWeekEnd(date)}
+                calendarStartDay={1}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="เลือกวันสุดท้าย"
+                minDate={weekStart ?? undefined}
                 className="border rounded-lg p-2 w-full text-sm text-gray-800"
               />
             </div>
