@@ -198,7 +198,7 @@ export default function Home() {
       setSendHistory((prev) => {
         const weekEntry = { ...(prev[weekLabel] ?? {}) };
         for (const r of data.results) {
-          if (r.status === "sent") weekEntry[r.name] = now;
+          if (r.status === "sent") weekEntry[r.name.trim()] = now;
         }
         const updated = { ...prev, [weekLabel]: weekEntry };
         localStorage.setItem("mm_sendHistory", JSON.stringify(updated));
@@ -287,6 +287,7 @@ export default function Home() {
                 lineUserId={lineUsers[staff.name.trim()] ?? ""}
                 nickname={nicknames[staff.name.trim()] ?? ""}
                 sendHistory={sendHistory[weekLabel] ?? {}}
+                staffNameKey={staff.name.trim()}
                 isSending={sendingName === staff.name}
                 onStoreLead={setStoreLead}
                 onLeave={setLeave}
@@ -328,7 +329,7 @@ export default function Home() {
             <h2 className="font-semibold text-lg text-[#4a7c59]">5. สถานะการแจ้งค่าจ้าง — {weekLabel}</h2>
             <div className="space-y-2">
               {payroll.map((staff) => {
-                const sentAt = sendHistory[weekLabel]?.[staff.name];
+                const sentAt = sendHistory[weekLabel]?.[staff.name.trim()];
                 return (
                   <div key={staff.name} className="flex items-center justify-between border rounded-xl px-4 py-3">
                     <span className="font-medium text-gray-800">{staff.name}</span>
@@ -377,6 +378,7 @@ function StaffCard({
   lineUserId,
   nickname,
   sendHistory,
+  staffNameKey,
   isSending,
   onStoreLead,
   onLeave,
@@ -391,6 +393,7 @@ function StaffCard({
   lineUserId: string;
   nickname: string;
   sendHistory: Record<string, string>;
+  staffNameKey: string;
   isSending: boolean;
   onStoreLead: (name: string, date: string, val: boolean) => void;
   onLeave: (name: string, date: string, val: string) => void;
@@ -444,9 +447,9 @@ function StaffCard({
       {/* Per-staff LINE send button */}
       <div className="border-t pt-4 flex items-center justify-between">
         <div className="text-xs text-gray-500">
-          {sendHistory[staff.name] ? (
+          {sendHistory[staffNameKey] ? (
             <span className="text-green-600 font-medium">
-              ✓ ส่งแล้ว {new Date(sendHistory[staff.name]).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
+              ✓ ส่งแล้ว {new Date(sendHistory[staffNameKey]).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
             </span>
           ) : (
             <span className="text-amber-600">ยังไม่ได้ส่ง</span>
