@@ -1,4 +1,4 @@
-export type LeaveType = "sick" | "personal";
+export type LeaveType = "sick" | "personal" | "suspended";
 
 export type SlotPay = {
   slot: string;

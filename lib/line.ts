@@ -14,7 +14,7 @@ export function buildPaySummary(payroll: StaffPayroll, weekLabel: string, nickna
   for (const day of payroll.days) {
     const d = formatDate(day.date);
     if (day.leave) {
-      const label = day.leave === "sick" ? "ลาป่วย" : "ลากิจ";
+      const label = day.leave === "sick" ? "ลาป่วย" : day.leave === "suspended" ? "ระงับชั่วคราว" : "ลากิจ";
       lines.push(`${d}  ${label}`);
     } else if (day.isStoreLead) {
       const bonus = day.bonusPct ? ` (+${day.bonusPct}% โบนัสวันหยุด)` : "";

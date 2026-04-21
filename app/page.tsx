@@ -636,6 +636,7 @@ function DayRow({
           <option value="">มาทำงาน</option>
           <option value="sick">ลาป่วย</option>
           <option value="personal">ลากิจ</option>
+          <option value="suspended">ระงับชั่วคราว</option>
         </select>
 
         {!day.leave && (
@@ -656,7 +657,7 @@ function DayRow({
 
         <span className="ml-auto font-semibold text-sm text-gray-900">
           {day.leave ? (
-            <span className="text-gray-900">{day.leave === "sick" ? "ลาป่วย" : "ลากิจ"}</span>
+            <span className="text-gray-900">{day.leave === "sick" ? "ลาป่วย" : day.leave === "suspended" ? "ระงับชั่วคราว" : "ลากิจ"}</span>
           ) : (
             `฿${day.dailyTotal.toFixed(2)}`
           )}
