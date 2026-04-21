@@ -66,7 +66,7 @@ export default function Home() {
           ? (!resolvedIn && !resolvedOut ? "both" : !resolvedIn ? "in" : "out") as DayRecord["missingClock"]
           : undefined;
 
-        if (stillMissing) return { ...day, clockIn: resolvedIn, clockOut: resolvedOut, missingClock: stillMissing };
+        if (stillMissing) return { ...day, clockIn: resolvedIn, clockOut: resolvedOut, missingClock: stillMissing, slots: [], dailyTotal: 0 };
         if (ov.leave) return { ...day, isStoreLead: false, leave: ov.leave as DayRecord["leave"], bonusPct: undefined, slots: [], dailyTotal: 0, missingClock: undefined };
         if (ov.isStoreLead) {
           const multiplier = ov.bonus ? 1 + ov.bonus / 100 : 1;
@@ -462,7 +462,7 @@ function DayRow({
             ⚠ {missingLabel} — กรุณากรอกเวลาด้านล่าง
           </div>
           <div className="flex gap-3 flex-wrap">
-            {(!day.clockIn) && (
+            {(day.missingClock === "in" || day.missingClock === "both") && (
               <label className="flex items-center gap-1 text-xs text-gray-900">
                 เวลาเข้างาน
                 <input
@@ -473,7 +473,7 @@ function DayRow({
                 />
               </label>
             )}
-            {(!day.clockOut) && (
+            {(day.missingClock === "out" || day.missingClock === "both") && (
               <label className="flex items-center gap-1 text-xs text-gray-900">
                 เวลาออกงาน
                 <input
