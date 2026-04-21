@@ -320,10 +320,33 @@ export default function Home() {
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </section>
 
+        {/* Payment summary */}
+        {payroll && (
+          <section className="bg-white rounded-2xl p-6 shadow space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-lg text-[#4a7c59]">3. สรุปยอดโอนทั้งหมด</h2>
+              <span className="text-[#4a7c59] font-bold">
+                รวม ฿{payroll.reduce((s, st) => s + st.weeklyTotal, 0).toFixed(2)}
+              </span>
+            </div>
+            <div className="divide-y border rounded-xl overflow-hidden">
+              {[...payroll].sort((a, b) => a.name.localeCompare(b.name, "th")).map((staff) => (
+                <div key={staff.name} className="flex items-center justify-between px-4 py-3">
+                  <span className="text-sm text-gray-800">{nicknames[staff.name.trim()] || staff.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-gray-900">฿{staff.weeklyTotal.toFixed(2)}</span>
+                    <CopyButton text={staff.weeklyTotal.toFixed(2)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Results */}
         {payroll && (
           <section className="space-y-4">
-            <h2 className="font-semibold text-lg text-[#4a7c59]">3. ผลการคำนวณ</h2>
+            <h2 className="font-semibold text-lg text-[#4a7c59]">4. รายละเอียดรายคน</h2>
             {[...payroll].sort((a, b) => a.name.localeCompare(b.name, "th")).map((staff) => (
               <StaffCard
                 key={staff.name}
@@ -457,6 +480,22 @@ export default function Home() {
   );
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded-lg transition"
+    >
+      {copied ? "✓ คัดลอก" : "คัดลอก"}
+    </button>
+  );
+}
+
 function StaffCard({
   staff,
   overrides,
@@ -494,7 +533,10 @@ function StaffCard({
     <div className="bg-white rounded-2xl p-6 shadow space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-lg text-gray-800">{staff.name}</h3>
-        <span className="text-[#4a7c59] font-bold text-xl">฿{staff.weeklyTotal.toFixed(2)}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[#4a7c59] font-bold text-xl">฿{staff.weeklyTotal.toFixed(2)}</span>
+          <CopyButton text={staff.weeklyTotal.toFixed(2)} />
+        </div>
       </div>
 
       <div className="flex gap-3">
