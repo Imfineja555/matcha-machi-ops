@@ -446,6 +446,8 @@ function DayRow({
     return `${dd}/${mm}/${yyyy}`;
   })();
 
+  const safeId = `${staffName}-${day.date}`.replace(/\s/g, "_");
+
   const missingLabel = day.missingClock === "both"
     ? "ไม่มีเวลาเข้า-ออก"
     : day.missingClock === "in"
@@ -467,7 +469,7 @@ function DayRow({
                 เวลาเข้างาน
                 <input
                   type="time"
-                  id={`ci-${staffName}-${day.date}`}
+                  id={`ci-${safeId}`}
                   defaultValue={ov.manualClockIn ?? ""}
                   className="border rounded-lg p-1 text-xs text-gray-900"
                 />
@@ -478,7 +480,7 @@ function DayRow({
                 เวลาออกงาน
                 <input
                   type="time"
-                  id={`co-${staffName}-${day.date}`}
+                  id={`co-${safeId}`}
                   defaultValue={ov.manualClockOut ?? ""}
                   className="border rounded-lg p-1 text-xs text-gray-900"
                 />
@@ -486,8 +488,8 @@ function DayRow({
             )}
             <button
               onClick={() => {
-                const ciEl = document.getElementById(`ci-${staffName}-${day.date}`) as HTMLInputElement | null;
-                const coEl = document.getElementById(`co-${staffName}-${day.date}`) as HTMLInputElement | null;
+                const ciEl = document.getElementById(`ci-${safeId}`) as HTMLInputElement | null;
+                const coEl = document.getElementById(`co-${safeId}`) as HTMLInputElement | null;
                 if (ciEl?.value) onManualClock(staffName, day.date, "in", ciEl.value);
                 if (coEl?.value) onManualClock(staffName, day.date, "out", coEl.value);
               }}
