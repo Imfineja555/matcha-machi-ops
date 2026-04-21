@@ -5,7 +5,7 @@ import { StaffPayroll, DayRecord } from "@/types";
 import { STORE_LEAD_RATE } from "@/lib/slots";
 import { calculateSlotPay } from "@/lib/slots";
 
-type Overrides = Record<string, { isStoreLead?: boolean; leave?: string; bonus?: number; manualClockIn?: string; manualClockOut?: string }>;
+type Overrides = Record<string, { isStoreLead?: boolean; leave?: string; bonus?: number }>;
 
 const THAI_MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
@@ -59,25 +59,19 @@ export default function Home() {
       const days = staff.days.map((day) => {
         const key = `${staff.name}__${day.date}`;
         const ov = overrides[key] ?? {};
-        // Resolve clock times: use manual input if CSV was missing
-        const resolvedIn = day.clockIn || (ov.manualClockIn ? ov.manualClockIn + ":00" : "");
-        const resolvedOut = day.clockOut || (ov.manualClockOut ? ov.manualClockOut + ":00" : "");
-        const stillMissing = !resolvedIn || !resolvedOut
-          ? (!resolvedIn && !resolvedOut ? "both" : !resolvedIn ? "in" : "out") as DayRecord["missingClock"]
-          : undefined;
 
-        if (stillMissing) return { ...day, clockIn: resolvedIn, clockOut: resolvedOut, missingClock: stillMissing, slots: [], dailyTotal: 0 };
+        if (day.missingClock) return day;
         if (ov.leave) return { ...day, isStoreLead: false, leave: ov.leave as DayRecord["leave"], bonusPct: undefined, slots: [], dailyTotal: 0, missingClock: undefined };
         if (ov.isStoreLead) {
           const multiplier = ov.bonus ? 1 + ov.bonus / 100 : 1;
           const dailyTotal = parseFloat((STORE_LEAD_RATE * multiplier).toFixed(2));
           return { ...day, isStoreLead: true, leave: undefined, bonusPct: ov.bonus, slots: [], dailyTotal, missingClock: undefined };
         }
-        const baseSlots = calculateSlotPay(resolvedIn, resolvedOut);
+        const baseSlots = calculateSlotPay(day.clockIn, day.clockOut);
         const multiplier = ov.bonus ? 1 + ov.bonus / 100 : 1;
         const slots = baseSlots.map((s) => ({ ...s, amount: parseFloat((s.amount * multiplier).toFixed(2)) }));
         const dailyTotal = parseFloat(slots.reduce((s, p) => s + p.amount, 0).toFixed(2));
-        return { ...day, clockIn: resolvedIn, clockOut: resolvedOut, isStoreLead: false, leave: undefined, bonusPct: ov.bonus, slots, dailyTotal, missingClock: undefined };
+        return { ...day, isStoreLead: false, leave: undefined, bonusPct: ov.bonus, slots, dailyTotal, missingClock: undefined };
       });
       const weeklyTotal = parseFloat(days.reduce((s, d) => s + d.dailyTotal, 0).toFixed(2));
       return { ...staff, days, weeklyTotal };
@@ -125,12 +119,27 @@ export default function Home() {
     setOverrides((prev) => ({ ...prev, [key]: { leave: val || undefined, isStoreLead: false } }));
   }
 
-  function setManualClock(name: string, date: string, field: "in" | "out", val: string) {
-    const key = `${name}__${date}`;
-    setOverrides((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], [field === "in" ? "manualClockIn" : "manualClockOut"]: val },
-    }));
+  function applyManualClock(staffName: string, date: string, clockIn: string, clockOut: string) {
+    setBasePayroll((prev) => {
+      if (!prev) return prev;
+      return prev.map((staff) => {
+        if (staff.name !== staffName) return staff;
+        const days = staff.days.map((day) => {
+          if (day.date !== date) return day;
+          const newIn = clockIn ? clockIn + ":00" : day.clockIn;
+          const newOut = clockOut ? clockOut + ":00" : day.clockOut;
+          const stillMissing = !newIn || !newOut
+            ? (!newIn && !newOut ? "both" : !newIn ? "in" : "out") as DayRecord["missingClock"]
+            : undefined;
+          if (stillMissing) return { ...day, clockIn: newIn, clockOut: newOut, missingClock: stillMissing };
+          const slots = calculateSlotPay(newIn, newOut);
+          const dailyTotal = parseFloat(slots.reduce((s, p) => s + p.amount, 0).toFixed(2));
+          return { ...day, clockIn: newIn, clockOut: newOut, missingClock: undefined, slots, dailyTotal };
+        });
+        const weeklyTotal = parseFloat(days.reduce((s, d) => s + d.dailyTotal, 0).toFixed(2));
+        return { ...staff, days, weeklyTotal };
+      });
+    });
   }
 
   function setBonus(name: string, date: string, val: string) {
@@ -272,7 +281,7 @@ export default function Home() {
                 onStoreLead={setStoreLead}
                 onLeave={setLeave}
                 onBonus={setBonus}
-                onManualClock={setManualClock}
+                onApplyManualClock={applyManualClock}
                 onLineUserChange={(uid) => saveLineUser(staff.name, uid)}
                 onNicknameChange={(nick) => saveNickname(staff.name, nick)}
               />
@@ -364,7 +373,7 @@ function StaffCard({
   onStoreLead,
   onLeave,
   onBonus,
-  onManualClock,
+  onApplyManualClock,
   onLineUserChange,
   onNicknameChange,
 }: {
@@ -375,7 +384,7 @@ function StaffCard({
   onStoreLead: (name: string, date: string, val: boolean) => void;
   onLeave: (name: string, date: string, val: string) => void;
   onBonus: (name: string, date: string, val: string) => void;
-  onManualClock: (name: string, date: string, field: "in" | "out", val: string) => void;
+  onApplyManualClock: (staffName: string, date: string, clockIn: string, clockOut: string) => void;
   onLineUserChange: (uid: string) => void;
   onNicknameChange: (nick: string) => void;
 }) {
@@ -413,7 +422,7 @@ function StaffCard({
             onStoreLead={onStoreLead}
             onLeave={onLeave}
             onBonus={onBonus}
-            onManualClock={onManualClock}
+            onApplyManualClock={onApplyManualClock}
           />
         ))}
       </div>
@@ -428,7 +437,7 @@ function DayRow({
   onStoreLead,
   onLeave,
   onBonus,
-  onManualClock,
+  onApplyManualClock,
 }: {
   day: DayRecord;
   staffName: string;
@@ -436,13 +445,13 @@ function DayRow({
   onStoreLead: (name: string, date: string, val: boolean) => void;
   onLeave: (name: string, date: string, val: string) => void;
   onBonus: (name: string, date: string, val: string) => void;
-  onManualClock: (name: string, date: string, field: "in" | "out", val: string) => void;
+  onApplyManualClock: (staffName: string, date: string, clockIn: string, clockOut: string) => void;
 }) {
   const key = `${staffName}__${day.date}`;
   const ov = overrides[key] ?? {};
 
-  const [localIn, setLocalIn] = useState(ov.manualClockIn ?? "");
-  const [localOut, setLocalOut] = useState(ov.manualClockOut ?? "");
+  const [localIn, setLocalIn] = useState("");
+  const [localOut, setLocalOut] = useState("");
 
   const displayDate = (() => {
     const [yyyy, mm, dd] = day.date.split("-");
@@ -492,10 +501,7 @@ function DayRow({
               </label>
             )}
             <button
-              onClick={() => {
-                if (localIn && /^\d{2}:\d{2}$/.test(localIn)) onManualClock(staffName, day.date, "in", localIn);
-                if (localOut && /^\d{2}:\d{2}$/.test(localOut)) onManualClock(staffName, day.date, "out", localOut);
-              }}
+              onClick={() => onApplyManualClock(staffName, day.date, localIn, localOut)}
               className="bg-[#4a7c59] text-white text-xs px-3 py-1 rounded-lg hover:bg-[#3a6347]"
             >
               ยืนยัน
