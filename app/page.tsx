@@ -94,16 +94,18 @@ export default function Home() {
   }, []);
 
   function saveNickname(name: string, nick: string) {
+    const key = name.trim();
     setNicknames((prev) => {
-      const updated = { ...prev, [name]: nick };
+      const updated = { ...prev, [key]: nick };
       localStorage.setItem("mm_nicknames", JSON.stringify(updated));
       return updated;
     });
   }
 
   function saveLineUser(name: string, uid: string) {
+    const key = name.trim();
     setLineUsers((prev) => {
-      const updated = { ...prev, [name]: uid };
+      const updated = { ...prev, [key]: uid };
       localStorage.setItem("mm_lineUsers", JSON.stringify(updated));
       return updated;
     });
@@ -291,8 +293,8 @@ export default function Home() {
                 key={staff.name}
                 staff={staff}
                 overrides={overrides}
-                lineUserId={lineUsers[staff.name] ?? ""}
-                nickname={nicknames[staff.name] ?? ""}
+                lineUserId={lineUsers[staff.name.trim()] ?? ""}
+                nickname={nicknames[staff.name.trim()] ?? ""}
                 onStoreLead={setStoreLead}
                 onLeave={setLeave}
                 onBonus={setBonus}
@@ -416,6 +418,7 @@ function StaffCard({
           placeholder="ชื่อเล่น (nickname)"
           value={nickname}
           onChange={(e) => onNicknameChange(e.target.value)}
+          onBlur={(e) => onNicknameChange(e.target.value)}
           className="border rounded-lg p-2 w-1/3 text-sm text-gray-800"
         />
         <input
@@ -423,6 +426,7 @@ function StaffCard({
           placeholder="LINE User ID (Uxxxxxxxx...)"
           value={lineUserId}
           onChange={(e) => onLineUserChange(e.target.value)}
+          onBlur={(e) => onLineUserChange(e.target.value)}
           className="border rounded-lg p-2 flex-1 text-sm font-mono text-gray-800"
         />
       </div>
