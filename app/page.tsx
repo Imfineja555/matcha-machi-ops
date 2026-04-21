@@ -164,6 +164,25 @@ export default function Home() {
     });
   }
 
+  function addManualDay(staffName: string, date: string, clockIn: string, clockOut: string) {
+    if (!date || !clockIn || !clockOut) return;
+    setBasePayroll((prev) => {
+      if (!prev) return prev;
+      return prev.map((staff) => {
+        if (staff.name !== staffName) return staff;
+        if (staff.days.some((d) => d.date === date)) return staff; // already exists
+        const ciStr = clockIn + ":00";
+        const coStr = clockOut + ":00";
+        const slots = calculateSlotPay(ciStr, coStr);
+        const dailyTotal = parseFloat(slots.reduce((s, p) => s + p.amount, 0).toFixed(2));
+        const newDay = { date, clockIn: ciStr, clockOut: coStr, isStoreLead: false, slots, dailyTotal };
+        const days = [...staff.days, newDay].sort((a, b) => a.date.localeCompare(b.date));
+        const weeklyTotal = parseFloat(days.reduce((s, d) => s + d.dailyTotal, 0).toFixed(2));
+        return { ...staff, days, weeklyTotal };
+      });
+    });
+  }
+
   function setBonus(name: string, date: string, val: string) {
     const key = `${name}__${date}`;
     const num = val === "" ? undefined : Math.max(0, Number(val));
@@ -319,6 +338,7 @@ export default function Home() {
                 onLeave={setLeave}
                 onBonus={setBonus}
                 onApplyManualClock={applyManualClock}
+                onAddManualDay={addManualDay}
                 onLineUserChange={(uid) => saveLineUser(staff.name, uid)}
                 onNicknameChange={(nick) => saveNickname(staff.name, nick)}
                 onSendLine={() => sendLine(staff.name)}
@@ -449,6 +469,7 @@ function StaffCard({
   onLeave,
   onBonus,
   onApplyManualClock,
+  onAddManualDay,
   onLineUserChange,
   onNicknameChange,
   onSendLine,
@@ -464,6 +485,7 @@ function StaffCard({
   onLeave: (name: string, date: string, val: string) => void;
   onBonus: (name: string, date: string, val: string) => void;
   onApplyManualClock: (staffName: string, date: string, clockIn: string, clockOut: string) => void;
+  onAddManualDay: (staffName: string, date: string, clockIn: string, clockOut: string) => void;
   onLineUserChange: (uid: string) => void;
   onNicknameChange: (nick: string) => void;
   onSendLine: () => void;
@@ -509,6 +531,9 @@ function StaffCard({
         ))}
       </div>
 
+      {/* Add missing day */}
+      <AddDayForm staffName={staff.name} onAdd={onAddManualDay} />
+
       {/* Per-staff LINE send button */}
       <div className="border-t pt-4 flex items-center justify-between">
         <div className="text-xs text-gray-500">
@@ -527,6 +552,52 @@ function StaffCard({
         >
           {isSending ? "กำลังส่ง..." : "ส่ง LINE"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+function AddDayForm({ staffName, onAdd }: { staffName: string; onAdd: (staffName: string, date: string, clockIn: string, clockOut: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState("");
+  const [clockIn, setClockIn] = useState("");
+  const [clockOut, setClockOut] = useState("");
+
+  function handleAdd() {
+    if (!date || !clockIn || !clockOut) return;
+    // Convert dd/mm/yyyy to yyyy-mm-dd
+    const [dd, mm, yyyy] = date.split("/");
+    const iso = `${yyyy}-${mm}-${dd}`;
+    onAdd(staffName, iso, clockIn, clockOut);
+    setDate(""); setClockIn(""); setClockOut(""); setOpen(false);
+  }
+
+  if (!open) return (
+    <button onClick={() => setOpen(true)} className="text-xs text-[#4a7c59] hover:underline">
+      + เพิ่มวันที่ลืมลงเวลา
+    </button>
+  );
+
+  return (
+    <div className="border border-dashed border-[#4a7c59] rounded-xl p-4 space-y-3 bg-[#f0f7f0]">
+      <p className="text-xs font-semibold text-[#4a7c59]">เพิ่มวันที่ลืมลงเวลา</p>
+      <div className="flex flex-wrap gap-3">
+        <label className="flex flex-col gap-1 text-xs text-gray-900">
+          วันที่ (dd/mm/yyyy)
+          <input type="text" placeholder="เช่น 13/04/2026" maxLength={10} value={date} onChange={(e) => setDate(e.target.value)} className="border rounded-lg p-1 text-sm w-32 font-mono" />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-gray-900">
+          เวลาเข้า (HH:MM)
+          <input type="text" placeholder="08:30" maxLength={5} value={clockIn} onChange={(e) => setClockIn(e.target.value)} className="border rounded-lg p-1 text-sm w-20 font-mono" />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-gray-900">
+          เวลาออก (HH:MM)
+          <input type="text" placeholder="18:30" maxLength={5} value={clockOut} onChange={(e) => setClockOut(e.target.value)} className="border rounded-lg p-1 text-sm w-20 font-mono" />
+        </label>
+      </div>
+      <div className="flex gap-2">
+        <button onClick={handleAdd} className="bg-[#4a7c59] text-white text-xs px-4 py-2 rounded-lg">ยืนยัน</button>
+        <button onClick={() => setOpen(false)} className="text-xs text-gray-500 px-3 py-2">ยกเลิก</button>
       </div>
     </div>
   );
