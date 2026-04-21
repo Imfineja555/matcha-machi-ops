@@ -239,37 +239,27 @@ export default function Home() {
 
         {/* Week label */}
         <section className="bg-white rounded-2xl p-6 shadow space-y-3">
-          <h2 className="font-semibold text-lg text-[#4a7c59]">2. ระบุสัปดาห์</h2>
-          <div className="flex items-end gap-2">
-            <div className="flex flex-col gap-2 flex-1">
-              <label className="text-xs text-gray-600 font-medium">วันแรก</label>
-              <DatePicker
-                selected={weekStart}
-                onChange={(date: Date | null) => setWeekStart(date)}
-                calendarStartDay={1}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="dd/mm/yyyy"
-                wrapperClassName="w-full"
-                className="border rounded-lg p-2 w-full text-sm text-gray-900"
-              />
-            </div>
-            <span className="pb-2 text-gray-500 font-medium">–</span>
-            <div className="flex flex-col gap-2 flex-1">
-              <label className="text-xs text-gray-600 font-medium">วันสุดท้าย</label>
-              <DatePicker
-                selected={weekEnd}
-                onChange={(date: Date | null) => setWeekEnd(date)}
-                calendarStartDay={1}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="dd/mm/yyyy"
-                minDate={weekStart ?? undefined}
-                wrapperClassName="w-full"
-                className="border rounded-lg p-2 w-full text-sm text-gray-900"
-              />
-            </div>
-          </div>
+          <h2 className="font-semibold text-lg text-[#4a7c59]">2. ระบุสัปดาห์ <span className="text-red-500">*</span></h2>
+          <DatePicker
+            selectsRange
+            startDate={weekStart ?? undefined}
+            endDate={weekEnd ?? undefined}
+            onChange={(range: [Date | null, Date | null]) => {
+              setWeekStart(range[0]);
+              setWeekEnd(range[1]);
+            }}
+            calendarStartDay={1}
+            dateFormat="dd/MM/yyyy"
+            placeholderText="เลือกวันแรก — วันสุดท้าย"
+            wrapperClassName="w-full"
+            className="border-2 border-[#4a7c59] rounded-lg p-2 w-full text-sm text-gray-900"
+            isClearable
+          />
           {weekLabel && (
             <p className="text-sm text-[#4a7c59] font-medium">สัปดาห์: {weekLabel}</p>
+          )}
+          {!weekLabel && (
+            <p className="text-xs text-red-500">กรุณาเลือกช่วงสัปดาห์ก่อนคำนวณค่าจ้าง</p>
           )}
         </section>
 
@@ -277,7 +267,7 @@ export default function Home() {
         <section className="bg-white rounded-2xl p-6 shadow">
           <button
             onClick={calculate}
-            disabled={!csvText || loading}
+            disabled={!csvText || !weekStart || !weekEnd || loading}
             className="w-full bg-[#4a7c59] text-white py-3 rounded-xl font-semibold disabled:opacity-40 hover:bg-[#3a6347] transition"
           >
             {loading ? "กำลังคำนวณ..." : "คำนวณค่าจ้าง"}
