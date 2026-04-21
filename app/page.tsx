@@ -257,16 +257,16 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f0e8] p-6 font-sans">
+    <main className="min-h-screen bg-[#f5f0e8] p-3 sm:p-6 font-sans">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="bg-[#4a7c59] text-white rounded-2xl p-6 shadow">
+        <div className="bg-[#4a7c59] text-white rounded-2xl p-4 sm:p-6 shadow">
           <h1 className="text-2xl font-bold">Matcha Machi Payroll</h1>
           <p className="text-sm opacity-80 mt-1">ระบบคำนวณค่าจ้างรายสัปดาห์</p>
         </div>
 
         {/* Upload */}
-        <section className="bg-white rounded-2xl p-6 shadow space-y-4">
+        <section className="bg-white rounded-2xl p-4 sm:p-6 shadow space-y-4">
           <h2 className="font-semibold text-lg text-[#4a7c59]">1. อัปโหลด CSV จาก POS</h2>
           <input ref={fileRef} type="file" accept=".csv,.txt" onChange={handleFile} className="hidden" />
           <button
@@ -283,7 +283,7 @@ export default function Home() {
         </section>
 
         {/* Week label */}
-        <section className="bg-white rounded-2xl p-6 shadow space-y-3">
+        <section className="bg-white rounded-2xl p-4 sm:p-6 shadow space-y-3">
           <h2 className="font-semibold text-lg text-[#4a7c59]">2. ระบุสัปดาห์ <span className="text-red-500">*</span></h2>
           <DatePicker
             selectsRange
@@ -309,7 +309,7 @@ export default function Home() {
         </section>
 
         {/* Calculate */}
-        <section className="bg-white rounded-2xl p-6 shadow">
+        <section className="bg-white rounded-2xl p-4 sm:p-6 shadow">
           <button
             onClick={calculate}
             disabled={!csvText || !weekStart || !weekEnd || loading}
@@ -322,7 +322,7 @@ export default function Home() {
 
         {/* Payment summary */}
         {payroll && (
-          <section className="bg-white rounded-2xl p-6 shadow space-y-3">
+          <section className="bg-white rounded-2xl p-4 sm:p-6 shadow space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-lg text-[#4a7c59]">3. สรุปยอดโอนทั้งหมด</h2>
               <span className="text-[#4a7c59] font-bold">
@@ -372,7 +372,7 @@ export default function Home() {
 
         {/* Send all LINE */}
         {payroll && (
-          <section className="bg-white rounded-2xl p-6 shadow space-y-4">
+          <section className="bg-white rounded-2xl p-4 sm:p-6 shadow space-y-4">
             <h2 className="font-semibold text-lg text-[#4a7c59]">4. ส่ง LINE ทุกคน</h2>
             <button
               onClick={() => sendLine()}
@@ -394,7 +394,7 @@ export default function Home() {
         )}
         {/* Panel 5: Payment Status */}
         {payroll && weekLabel && (
-          <section className="bg-white rounded-2xl p-6 shadow space-y-4">
+          <section className="bg-white rounded-2xl p-4 sm:p-6 shadow space-y-4">
             <h2 className="font-semibold text-lg text-[#4a7c59]">5. สถานะการแจ้งค่าจ้าง — {weekLabel}</h2>
             <div className="space-y-2">
               {[...payroll].sort((a, b) => a.name.localeCompare(b.name, "th")).map((staff) => {
@@ -438,7 +438,7 @@ export default function Home() {
         )}
 
         {/* Panel 6: Store Lead Defaults */}
-        <section className="bg-white rounded-2xl p-6 shadow space-y-4">
+        <section className="bg-white rounded-2xl p-4 sm:p-6 shadow space-y-4">
           <div>
             <h2 className="font-semibold text-lg text-[#4a7c59]">6. ตารางเวร Store Lead รายสัปดาห์</h2>
             <p className="text-xs text-gray-500 mt-1">ใส่ชื่อผู้รับหน้าที่ Store Lead แต่ละวัน — ระบบจะติ๊กให้อัตโนมัติทุกสัปดาห์</p>
@@ -530,7 +530,7 @@ function StaffCard({
   onSendLine: () => void;
 }) {
   return (
-    <div className="bg-white rounded-2xl p-6 shadow space-y-4">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-lg text-gray-800">{staff.name}</h3>
         <div className="flex items-center gap-2">
@@ -539,14 +539,14 @@ function StaffCard({
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="text"
           placeholder="ชื่อเล่น (nickname)"
           value={nickname}
           onChange={(e) => onNicknameChange(e.target.value)}
           onBlur={(e) => onNicknameChange(e.target.value)}
-          className="border rounded-lg p-2 w-1/3 text-sm text-gray-800"
+          className="border rounded-lg p-3 sm:w-1/3 text-sm text-gray-800 min-h-[44px]"
         />
         <input
           type="text"
@@ -554,7 +554,7 @@ function StaffCard({
           value={lineUserId}
           onChange={(e) => onLineUserChange(e.target.value)}
           onBlur={(e) => onLineUserChange(e.target.value)}
-          className="border rounded-lg p-2 flex-1 text-sm font-mono text-gray-800"
+          className="border rounded-lg p-3 flex-1 text-sm font-mono text-gray-800 min-h-[44px]"
         />
       </div>
 
@@ -577,7 +577,7 @@ function StaffCard({
       <AddDayForm staffName={staff.name} onAdd={onAddManualDay} />
 
       {/* Per-staff LINE send button */}
-      <div className="border-t pt-4 flex items-center justify-between">
+      <div className="border-t pt-4 flex flex-wrap items-center justify-between gap-3">
         <div className="text-xs text-gray-500">
           {sendHistory[staffNameKey] ? (
             <span className="text-green-600 font-medium">
@@ -590,7 +590,7 @@ function StaffCard({
         <button
           onClick={onSendLine}
           disabled={isSending || !lineUserId}
-          className="bg-[#06C755] text-white text-sm px-4 py-2 rounded-xl font-semibold disabled:opacity-40 hover:bg-[#05a847] transition"
+          className="bg-[#06C755] text-white text-sm px-4 py-3 rounded-xl font-semibold disabled:opacity-40 hover:bg-[#05a847] transition min-h-[44px]"
         >
           {isSending ? "กำลังส่ง..." : "ส่ง LINE"}
         </button>
@@ -722,8 +722,8 @@ function DayRow({
           </div>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="font-medium text-sm w-28 text-gray-900">{displayDate}</span>
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <span className="font-medium text-sm w-24 text-gray-900">{displayDate}</span>
         {isEditing ? (
           <div className="flex items-center gap-1">
             <input
