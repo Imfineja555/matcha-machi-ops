@@ -21,7 +21,9 @@ export async function POST(req: NextRequest) {
     const userId = event.source?.userId;
     if (!userId || !event.replyToken) continue;
 
-    // Reply to the user with their own LINE User ID
+    const text = event.message?.text?.trim().toLowerCase() ?? "";
+    if (text !== "getid") continue;
+
     if (token) {
       await fetch("https://api.line.me/v2/bot/message/reply", {
         method: "POST",
