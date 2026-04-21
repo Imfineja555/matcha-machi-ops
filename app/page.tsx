@@ -56,8 +56,8 @@ export default function Home() {
   const [sendResults, setSendResults] = useState<{ name: string; status: string }[] | null>(null);
   // sendHistory: weekLabel → { staffName → sentAt ISO string }
   const [sendHistory, setSendHistory] = useState<Record<string, Record<string, string>>>({});
-  // storeLeadDefaults: staffName → set of day-of-week numbers (0=Sun,1=Mon,...,6=Sat)
-  const [storeLeadDefaults, setStoreLeadDefaults] = useState<Record<string, number[]>>({});
+  // storeLeadByDay: dow (0-6) → staff name who is Store Lead that day
+  const [storeLeadByDay, setStoreLeadByDay] = useState<Record<number, string>>({});
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -92,7 +92,7 @@ export default function Home() {
     setNicknames(loadFromStorage("mm_nicknames", {}));
     setLineUsers(loadFromStorage("mm_lineUsers", {}));
     setSendHistory(loadFromStorage("mm_sendHistory", {}));
-    setStoreLeadDefaults(loadFromStorage("mm_storeLeadDefaults", {}));
+    setStoreLeadByDay(loadFromStorage("mm_storeLeadByDay", {}));
   }, []);
 
   function saveNickname(name: string, nick: string) {
@@ -125,13 +125,13 @@ export default function Home() {
     const key = `${name}__${date}`;
     setOverrides((prev) => ({ ...prev, [key]: { ...prev[key], isStoreLead: val, leave: undefined } }));
 
-    // Remember which day-of-week this person is Store Lead
+    // Remember which staff is Store Lead on this day-of-week
     const dow = new Date(date).getDay();
-    setStoreLeadDefaults((prev) => {
-      const days = prev[name.trim()] ?? [];
-      const updated = val ? [...new Set([...days, dow])] : days.filter((d) => d !== dow);
-      const next = { ...prev, [name.trim()]: updated };
-      localStorage.setItem("mm_storeLeadDefaults", JSON.stringify(next));
+    setStoreLeadByDay((prev) => {
+      const next = { ...prev };
+      if (val) next[dow] = name.trim();
+      else if (next[dow] === name.trim()) delete next[dow];
+      localStorage.setItem("mm_storeLeadByDay", JSON.stringify(next));
       return next;
     });
   }
@@ -185,14 +185,13 @@ export default function Home() {
       setBasePayroll(data.payroll);
 
       // Apply Store Lead defaults from localStorage directly (avoids useEffect timing issues)
-      const savedDefaults = loadFromStorage<Record<string, number[]>>("mm_storeLeadDefaults", {});
+      const savedByDay = loadFromStorage<Record<number, string>>("mm_storeLeadByDay", {});
       const newOverrides: Overrides = {};
       for (const staff of data.payroll) {
-        const defaultDays = savedDefaults[staff.name.trim()] ?? [];
         for (const day of staff.days) {
           if (day.missingClock) continue;
           const dow = new Date(day.date).getDay();
-          if (defaultDays.includes(dow)) {
+          if (savedByDay[dow]?.trim() === staff.name.trim()) {
             newOverrides[`${staff.name}__${day.date}`] = { isStoreLead: true };
           }
         }
@@ -396,60 +395,43 @@ export default function Home() {
         )}
 
         {/* Panel 6: Store Lead Defaults */}
-        {payroll && (
-          <section className="bg-white rounded-2xl p-6 shadow space-y-4">
-            <div>
-              <h2 className="font-semibold text-lg text-[#4a7c59]">6. วันที่เป็น Store Lead (ค่าเริ่มต้น)</h2>
-              <p className="text-xs text-gray-500 mt-1">ติ๊กวันที่แต่ละคนมักเป็น Store Lead — ระบบจะติ๊กให้อัตโนมัติทุกสัปดาห์</p>
-            </div>
-            <div className="space-y-3">
-              {[...payroll].sort((a, b) => a.name.localeCompare(b.name, "th")).map((staff) => {
-                const defaultDays = storeLeadDefaults[staff.name.trim()] ?? [];
-                const days = [
-                  { label: "จ", dow: 1 },
-                  { label: "อ", dow: 2 },
-                  { label: "พ", dow: 3 },
-                  { label: "พฤ", dow: 4 },
-                  { label: "ศ", dow: 5 },
-                  { label: "ส", dow: 6 },
-                  { label: "อา", dow: 0 },
-                ];
-                return (
-                  <div key={staff.name} className="flex flex-wrap items-center gap-3 border rounded-xl px-4 py-3">
-                    <span className="text-sm font-medium text-gray-800 w-40 truncate">{staff.name}</span>
-                    <div className="flex gap-2">
-                      {days.map(({ label, dow }) => {
-                        const active = defaultDays.includes(dow);
-                        return (
-                          <button
-                            key={dow}
-                            onClick={() => {
-                              const updated = active
-                                ? defaultDays.filter((d) => d !== dow)
-                                : [...defaultDays, dow];
-                              setStoreLeadDefaults((prev) => {
-                                const next = { ...prev, [staff.name.trim()]: updated };
-                                localStorage.setItem("mm_storeLeadDefaults", JSON.stringify(next));
-                                return next;
-                              });
-                            }}
-                            className={`w-8 h-8 rounded-full text-xs font-semibold transition ${
-                              active
-                                ? "bg-[#4a7c59] text-white"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
+        <section className="bg-white rounded-2xl p-6 shadow space-y-4">
+          <div>
+            <h2 className="font-semibold text-lg text-[#4a7c59]">6. ตารางเวร Store Lead รายสัปดาห์</h2>
+            <p className="text-xs text-gray-500 mt-1">ใส่ชื่อผู้รับหน้าที่ Store Lead แต่ละวัน — ระบบจะติ๊กให้อัตโนมัติทุกสัปดาห์</p>
+          </div>
+          <div className="divide-y border rounded-xl overflow-hidden">
+            {[
+              { label: "จันทร์", dow: 1 },
+              { label: "อังคาร", dow: 2 },
+              { label: "พุธ", dow: 3 },
+              { label: "พฤหัส", dow: 4 },
+              { label: "ศุกร์", dow: 5 },
+              { label: "เสาร์", dow: 6 },
+              { label: "อาทิตย์", dow: 0 },
+            ].map(({ label, dow }) => (
+              <div key={dow} className="flex items-center">
+                <div className="w-24 px-4 py-3 bg-gray-50 text-sm font-medium text-gray-700 shrink-0">{label}</div>
+                <input
+                  type="text"
+                  placeholder="ชื่อพนักงาน Store Lead"
+                  value={storeLeadByDay[dow] ?? ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setStoreLeadByDay((prev) => {
+                      const next = { ...prev };
+                      if (val) next[dow] = val;
+                      else delete next[dow];
+                      localStorage.setItem("mm_storeLeadByDay", JSON.stringify(next));
+                      return next;
+                    });
+                  }}
+                  className="flex-1 px-4 py-3 text-sm text-gray-900 outline-none border-l"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </main>
   );
