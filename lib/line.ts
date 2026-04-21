@@ -17,7 +17,8 @@ export function buildPaySummary(payroll: StaffPayroll, weekLabel: string, nickna
       const label = day.leave === "sick" ? "ลาป่วย" : "ลากิจ";
       lines.push(`${d}  ${label}`);
     } else if (day.isStoreLead) {
-      lines.push(`${d}  Store Lead  ฿500.00`);
+      const bonus = day.bonusPct ? ` (+${day.bonusPct}% โบนัสวันหยุด)` : "";
+      lines.push(`${d}  Store Lead  ฿${day.dailyTotal.toFixed(2)}${bonus}`);
     } else {
       lines.push(`${d}  ฿${day.dailyTotal.toFixed(2)}${day.bonusPct ? ` (+${day.bonusPct}% วันหยุด)` : ""}`);
       for (const s of day.slots) {

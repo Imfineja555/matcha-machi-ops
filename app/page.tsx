@@ -61,7 +61,11 @@ export default function Home() {
         const ov = overrides[key] ?? {};
         if (day.missingClock) return day;
         if (ov.leave) return { ...day, isStoreLead: false, leave: ov.leave as DayRecord["leave"], bonusPct: undefined, slots: [], dailyTotal: 0 };
-        if (ov.isStoreLead) return { ...day, isStoreLead: true, leave: undefined, bonusPct: undefined, slots: [], dailyTotal: STORE_LEAD_RATE };
+        if (ov.isStoreLead) {
+          const multiplier = ov.bonus ? 1 + ov.bonus / 100 : 1;
+          const dailyTotal = parseFloat((STORE_LEAD_RATE * multiplier).toFixed(2));
+          return { ...day, isStoreLead: true, leave: undefined, bonusPct: ov.bonus, slots: [], dailyTotal };
+        }
         if (!day.clockIn || !day.clockOut) return day;
         const baseSlots = calculateSlotPay(day.clockIn, day.clockOut);
         const multiplier = ov.bonus ? 1 + ov.bonus / 100 : 1;
@@ -464,7 +468,7 @@ function DayRow({
           <option value="personal">ลากิจ</option>
         </select>
 
-        {!day.leave && !ov.isStoreLead && (
+        {!day.leave && (
           <label className="flex items-center gap-1 text-xs text-gray-900">
             โบนัส
             <input
