@@ -16,6 +16,7 @@ export type DayRecord = {
   missingClock?: "in" | "out" | "both";
   isStoreLead: boolean;
   leave?: LeaveType;
+  bonusPct?: number; // holiday bonus percentage e.g. 50 = +50%
   slots: SlotPay[];
   dailyTotal: number;
 };

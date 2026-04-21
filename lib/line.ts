@@ -19,7 +19,7 @@ export function buildPaySummary(payroll: StaffPayroll, weekLabel: string, nickna
     } else if (day.isStoreLead) {
       lines.push(`${d}  Store Lead  ฿500.00`);
     } else {
-      lines.push(`${d}  ฿${day.dailyTotal.toFixed(2)}`);
+      lines.push(`${d}  ฿${day.dailyTotal.toFixed(2)}${day.bonusPct ? ` (+${day.bonusPct}% วันหยุด)` : ""}`);
       for (const s of day.slots) {
         lines.push(`  ${s.slot} (${s.from.slice(0, 5)}–${s.to.slice(0, 5)}) @${s.rate} = ฿${s.amount.toFixed(2)}`);
       }

@@ -5,7 +5,7 @@ import { StaffPayroll, DayRecord } from "@/types";
 import { STORE_LEAD_RATE } from "@/lib/slots";
 import { calculateSlotPay } from "@/lib/slots";
 
-type Overrides = Record<string, { isStoreLead?: boolean; leave?: string }>;
+type Overrides = Record<string, { isStoreLead?: boolean; leave?: string; bonus?: number }>;
 
 const THAI_MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
@@ -60,13 +60,14 @@ export default function Home() {
         const key = `${staff.name}__${day.date}`;
         const ov = overrides[key] ?? {};
         if (day.missingClock) return day;
-        if (ov.leave) return { ...day, isStoreLead: false, leave: ov.leave as DayRecord["leave"], slots: [], dailyTotal: 0 };
-        if (ov.isStoreLead) return { ...day, isStoreLead: true, leave: undefined, slots: [], dailyTotal: STORE_LEAD_RATE };
-        // Restore base slot calculation
+        if (ov.leave) return { ...day, isStoreLead: false, leave: ov.leave as DayRecord["leave"], bonusPct: undefined, slots: [], dailyTotal: 0 };
+        if (ov.isStoreLead) return { ...day, isStoreLead: true, leave: undefined, bonusPct: undefined, slots: [], dailyTotal: STORE_LEAD_RATE };
         if (!day.clockIn || !day.clockOut) return day;
-        const slots = calculateSlotPay(day.clockIn, day.clockOut);
+        const baseSlots = calculateSlotPay(day.clockIn, day.clockOut);
+        const multiplier = ov.bonus ? 1 + ov.bonus / 100 : 1;
+        const slots = baseSlots.map((s) => ({ ...s, amount: parseFloat((s.amount * multiplier).toFixed(2)) }));
         const dailyTotal = parseFloat(slots.reduce((s, p) => s + p.amount, 0).toFixed(2));
-        return { ...day, isStoreLead: false, leave: undefined, slots, dailyTotal };
+        return { ...day, isStoreLead: false, leave: undefined, bonusPct: ov.bonus, slots, dailyTotal };
       });
       const weeklyTotal = parseFloat(days.reduce((s, d) => s + d.dailyTotal, 0).toFixed(2));
       return { ...staff, days, weeklyTotal };
@@ -112,6 +113,12 @@ export default function Home() {
   function setLeave(name: string, date: string, val: string) {
     const key = `${name}__${date}`;
     setOverrides((prev) => ({ ...prev, [key]: { leave: val || undefined, isStoreLead: false } }));
+  }
+
+  function setBonus(name: string, date: string, val: string) {
+    const key = `${name}__${date}`;
+    const num = val === "" ? undefined : Math.max(0, Number(val));
+    setOverrides((prev) => ({ ...prev, [key]: { ...prev[key], bonus: num } }));
   }
 
   async function calculate() {
@@ -246,6 +253,7 @@ export default function Home() {
                 nickname={nicknames[staff.name] ?? ""}
                 onStoreLead={setStoreLead}
                 onLeave={setLeave}
+                onBonus={setBonus}
                 onLineUserChange={(uid) => saveLineUser(staff.name, uid)}
                 onNicknameChange={(nick) => saveNickname(staff.name, nick)}
               />
@@ -336,6 +344,7 @@ function StaffCard({
   nickname,
   onStoreLead,
   onLeave,
+  onBonus,
   onLineUserChange,
   onNicknameChange,
 }: {
@@ -345,6 +354,7 @@ function StaffCard({
   nickname: string;
   onStoreLead: (name: string, date: string, val: boolean) => void;
   onLeave: (name: string, date: string, val: string) => void;
+  onBonus: (name: string, date: string, val: string) => void;
   onLineUserChange: (uid: string) => void;
   onNicknameChange: (nick: string) => void;
 }) {
@@ -381,6 +391,7 @@ function StaffCard({
             overrides={overrides}
             onStoreLead={onStoreLead}
             onLeave={onLeave}
+            onBonus={onBonus}
           />
         ))}
       </div>
@@ -394,12 +405,14 @@ function DayRow({
   overrides,
   onStoreLead,
   onLeave,
+  onBonus,
 }: {
   day: DayRecord;
   staffName: string;
   overrides: Overrides;
   onStoreLead: (name: string, date: string, val: boolean) => void;
   onLeave: (name: string, date: string, val: string) => void;
+  onBonus: (name: string, date: string, val: string) => void;
 }) {
   const key = `${staffName}__${day.date}`;
   const ov = overrides[key] ?? {};
@@ -451,6 +464,22 @@ function DayRow({
           <option value="personal">ลากิจ</option>
         </select>
 
+        {!day.leave && !ov.isStoreLead && (
+          <label className="flex items-center gap-1 text-xs text-gray-900">
+            โบนัส
+            <input
+              type="number"
+              min="0"
+              max="500"
+              placeholder="0"
+              value={ov.bonus ?? ""}
+              onChange={(e) => onBonus(staffName, day.date, e.target.value)}
+              className="border rounded-lg p-1 w-14 text-xs text-gray-900"
+            />
+            %
+          </label>
+        )}
+
         <span className="ml-auto font-semibold text-sm text-gray-900">
           {day.leave ? (
             <span className="text-gray-900">{day.leave === "sick" ? "ลาป่วย" : "ลากิจ"}</span>
@@ -476,6 +505,9 @@ function DayRow({
 
       {day.isStoreLead && (
         <div className="pl-4 text-xs text-gray-900 font-medium">Store Lead — ฿500.00 (อัตราคงที่)</div>
+      )}
+      {day.bonusPct && day.bonusPct > 0 && (
+        <div className="pl-4 text-xs text-orange-700 font-medium">+ โบนัสวันหยุด {day.bonusPct}%</div>
       )}
     </div>
   );
