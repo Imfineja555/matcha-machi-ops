@@ -1,7 +1,8 @@
 export const SLOTS = [
   { name: "ช่วงที่ 1", end: "12:30", rate: 40 },
   { name: "ช่วงที่ 2", start: "12:30", end: "15:30", rate: 50 },
-  { name: "ช่วงที่ 3", start: "15:30", rate: 40 },
+  { name: "ช่วงที่ 3", start: "15:30", end: "19:00", rate: 40 },
+  { name: "OT", start: "19:00", rate: 45 },
 ] as const;
 
 export const STORE_LEAD_RATE = 500;
@@ -30,7 +31,8 @@ export function calculateSlotPay(clockInStr: string, clockOutStr: string) {
   const boundaries = [
     { name: "ช่วงที่ 1", from: 0, to: toSeconds("12:30"), rate: 40 },
     { name: "ช่วงที่ 2", from: toSeconds("12:30"), to: toSeconds("15:30"), rate: 50 },
-    { name: "ช่วงที่ 3", from: toSeconds("15:30"), to: 24 * 3600, rate: 40 },
+    { name: "ช่วงที่ 3", from: toSeconds("15:30"), to: toSeconds("19:00"), rate: 40 },
+    { name: "OT", from: toSeconds("19:00"), to: 24 * 3600, rate: 45 },
   ];
 
   return boundaries
