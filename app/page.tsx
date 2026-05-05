@@ -332,7 +332,12 @@ export default function Home() {
             <div className="divide-y border rounded-xl overflow-hidden">
               {[...payroll].sort((a, b) => a.name.localeCompare(b.name, "th")).map((staff) => (
                 <div key={staff.name} className="flex items-center justify-between px-4 py-3">
-                  <span className="text-sm text-gray-800">{nicknames[staff.name.trim()] || staff.name}</span>
+                  <span className="text-sm text-gray-800">
+                    {staff.name.trim()}
+                    {nicknames[staff.name.trim()] && (
+                      <span className="text-gray-500"> ({nicknames[staff.name.trim()]})</span>
+                    )}
+                  </span>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-gray-900">฿{staff.weeklyTotal.toFixed(2)}</span>
                     <CopyButton text={staff.weeklyTotal.toFixed(2)} />
