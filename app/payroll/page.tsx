@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
+import Link from "next/link";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { StaffPayroll, DayRecord } from "@/types";
@@ -258,7 +259,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#f5f0e8] p-3 sm:p-6 font-sans">
-      <a href="/" className="mm-back">กลับหน้าหลัก</a>
+      <Link href="/" className="mm-back">กลับหน้าหลัก</Link>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-[#4a7c59] text-white rounded-2xl p-4 sm:p-6 shadow">
