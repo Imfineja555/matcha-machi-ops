@@ -24,3 +24,25 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ---- back-office home and sign-in (brand: Mitr, green and cream) ---- */
+.mm-shell { min-height: 100vh; background: #fffef6; color: #1a2418; font-family: var(--font-mitr), "Noto Sans Thai", sans-serif; font-weight: 300; display: flex; justify-content: center; padding: 56px 20px; }
+.mm-shell h1 { font-weight: 500; font-size: 28px; color: #2a4d2a; line-height: 1.3; }
+.mm-sub { color: #4e6d4d; margin-top: 6px; }
+.mm-card { background: #fcfffe; border: 1px solid #e4e6d8; border-radius: 16px; padding: 24px; }
+.mm-login { align-self: center; width: min(420px, 100%); text-align: center; display: grid; gap: 6px; justify-items: center; padding: 40px 28px; }
+.mm-mark { width: 44px; height: 44px; margin-bottom: 8px; }
+.mm-btn { margin-top: 22px; display: inline-block; background: #2a4d2a; color: #fffef6; border-radius: 10px; padding: 11px 22px; font-weight: 400; text-decoration: none; }
+.mm-btn:hover { background: #1f3a1f; }
+.mm-error { margin-top: 14px; color: #8a3a2a; background: #f6e9e4; border-radius: 10px; padding: 10px 14px; font-size: 14.5px; }
+.mm-home { width: min(880px, 100%); }
+.mm-head { display: flex; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 28px; }
+.mm-user { font-size: 14px; color: #7f897b; }
+.mm-user a { margin-left: 12px; color: #4e6d4d; text-decoration: underline; text-underline-offset: 3px; }
+.mm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.mm-tool { display: grid; gap: 8px; text-decoration: none; color: inherit; }
+.mm-tool:hover { border-color: #2a4d2a; }
+.mm-tool h2 { font-weight: 500; font-size: 20px; color: #2a4d2a; }
+.mm-tool p { color: #4e6d4d; font-size: 15px; line-height: 1.6; }
+.mm-tool span { margin-top: 6px; color: #2a4d2a; font-weight: 400; text-decoration: underline; text-underline-offset: 3px; font-size: 14.5px; }
+.mm-back { display: inline-block; margin: 0 0 12px; font-size: 14px; color: #4e6d4d; text-decoration: underline; text-underline-offset: 3px; }
