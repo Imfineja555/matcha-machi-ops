@@ -18,7 +18,13 @@ async function forward(request: NextRequest, ctx: { params: Promise<{ path?: str
   try {
     upstream = await fetch(target, {
       method: request.method,
-      headers: { "x-machi-secret": secret, "x-machi-user": email, "Content-Type": "application/json" },
+      headers: {
+        "x-machi-secret": secret,
+        "x-machi-user": email,
+        // which workspace of the pricing tool the browser has open ("" = the main data)
+        "x-machi-ws": request.headers.get("x-machi-ws") ?? "",
+        "Content-Type": "application/json",
+      },
       body: hasBody ? await request.text() : undefined,
       cache: "no-store",
     });
